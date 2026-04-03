@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COREME Essay Practice — AI Grading</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:#1e293b;padding:16px 24px;border-bottom:2px solid #2e75b6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.header h1{font-size:18px;color:#93c5fd}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.api-status{font-size:12px;padding:4px 10px;border-radius:12px}
+.api-status.ok{background:#14532d;color:#4ade80}
+.api-status.no{background:#450a0a;color:#f87171;cursor:pointer}
+.btn{padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;transition:all .15s}
+.btn-blue{background:#2e75b6;color:#fff}.btn-blue:hover{background:#3b82f6}
+.btn-gray{background:#475569;color:#e2e8f0}.btn-gray:hover{background:#64748b}
+.btn-red{background:#7f1d1d;color:#fca5a5}.btn-red:hover{background:#991b1b}
+.btn-green{background:#14532d;color:#86efac}.btn-green:hover{background:#166534}
+
+.sidebar{position:fixed;left:0;top:0;width:280px;height:100vh;background:#1e293b;border-right:1px solid #334155;overflow-y:auto;padding-top:70px;z-index:10}
+.sidebar h3{padding:12px 16px 8px;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:1px}
+.q-list{list-style:none}
+.q-list li{padding:10px 16px;cursor:pointer;font-size:13px;line-height:1.4;border-left:3px solid transparent;transition:all .15s;color:#94a3b8}
+.q-list li:hover{background:#334155;color:#e2e8f0}
+.q-list li.active{background:#1e3a5f;border-left-color:#2e75b6;color:#93c5fd}
+.q-list li .q-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px}
+.q-list li .q-badge.graded{background:#14532d;color:#4ade80}
+.q-list li .q-badge.draft{background:#78350f;color:#fbbf24}
+
+.main{margin-left:280px;padding:24px;max-width:900px}
+
+.question-card{background:#1a2332;border:1px solid #334155;border-radius:12px;padding:24px;margin-bottom:20px}
+.q-number{font-size:12px;color:#64748b}
+.q-week{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#2e75b6;color:#fff;margin:4px 0 12px}
+.q-text{font-size:17px;line-height:1.7;color:#f1f5f9;margin-bottom:16px;white-space:pre-wrap}
+.q-hints{background:#0f172a;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px;font-size:14px;line-height:1.6;color:#fbbf24}
+.q-hints summary{cursor:pointer;color:#f59e0b;font-weight:bold;font-size:14px}
+.q-hints .hint-content{margin-top:8px;color:#d1d5db}
+
+.answer-area{margin-bottom:16px}
+.answer-area label{font-size:14px;color:#94a3b8;display:block;margin-bottom:6px}
+.answer-area textarea{width:100%;min-height:200px;background:#0f172a;border:1px solid #475569;border-radius:10px;padding:14px;color:#e2e8f0;font-size:15px;line-height:1.7;resize:vertical;font-family:inherit}
+.answer-area textarea:focus{outline:none;border-color:#60a5fa}
+.answer-area .char-count{text-align:right;font-size:12px;color:#64748b;margin-top:4px}
+
+.action-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+
+.grade-result{background:#0c1a2e;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin-bottom:16px;display:none}
+.grade-result.show{display:block;animation:fadeIn .3s}
+.grade-score{font-size:36px;font-weight:bold;text-align:center;margin-bottom:12px}
+.grade-score .score-num{color:#60a5fa}
+.grade-score .score-total{color:#64748b;font-size:20px}
+.grade-feedback{font-size:15px;line-height:1.8;color:#d1d5db;white-space:pre-wrap}
+.grade-feedback h4{color:#93c5fd;margin:12px 0 6px}
+
+.model-answer{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;margin-top:16px;display:none}
+.model-answer.show{display:block}
+.model-answer h4{color:#4ade80;margin-bottom:8px;font-size:14px}
+.model-answer .ma-text{font-size:14px;line-height:1.7;color:#d1d5db;white-space:pre-wrap}
+
+.history-section{margin-top:24px;border-top:1px solid #334155;padding-top:16px}
+.history-section h4{color:#94a3b8;font-size:14px;margin-bottom:12px}
+.history-item{background:#1a2332;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px}
+.history-item .h-date{color:#64748b;font-size:11px}
+.history-item .h-score{color:#60a5fa;font-weight:bold}
+
+.loading{text-align:center;padding:20px;color:#94a3b8}
+.loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid #334155;border-top-color:#60a5fa;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#1e293b;border:1px solid #475569;border-radius:12px;padding:24px;width:90%;max-width:440px}
+.modal h3{color:#93c5fd;margin-bottom:12px}
+.modal input{width:100%;padding:10px;background:#0f172a;border:1px solid #475569;border-radius:8px;color:#e2e8f0;font-size:14px;margin-bottom:12px}
+.modal input:focus{outline:none;border-color:#60a5fa}
+.modal .modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal p{font-size:13px;color:#94a3b8;margin-bottom:12px;line-height:1.5}
+
+@media(max-width:768px){
+  .sidebar{position:relative;width:100%;height:auto;max-height:200px;padding-top:0}
+  .main{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>COREME Essay Practice + AI Grading</h1>
+  <div class="header-right">
+    <span class="api-status no" id="apiStatus" onclick="showApiModal()">Click to set API Key</span>
+    <button class="btn btn-gray" onclick="exportHistory()">Export Records</button>
+  </div>
+</div>
+
+<div class="sidebar">
+  <h3>Questions 題目</h3>
+  <ul class="q-list" id="qList"></ul>
+</div>
+
+<div class="main" id="mainArea"></div>
+
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>Set Anthropic API Key</h3>
+    <p>Your key is stored only in your browser's localStorage and sent directly to Anthropic's API. It is never sent anywhere else.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <div class="modal-btns">
+      <button class="btn btn-gray" onclick="closeApiModal()">Cancel</button>
+      <button class="btn btn-blue" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // Q1-Q13: original 13 questions + 7 new ones = 20
+  {id:1,w:"Week 3",title:"Levels of Measurement 測量層次",
+   q:`What level of measurement — nominal, ordinal, interval, or ratio — describes each of the following variables? Briefly explain why for each.\n\n(a) Political party affiliation (KMT, DPP, TPP, none)\n(b) Education level (elementary, high school, bachelor's, master's, PhD)\n(c) Agreement on a 5-point Likert scale (1 = Strongly disagree to 5 = Strongly agree)\n(d) Monthly income in NTD\n(e) Ranking of top 5 favorite news outlets`,
+   hints:"每個變數判斷四個特性：有沒有分類？有沒有順序？間距相等嗎？有絕對零點嗎？用一句話解釋為什麼。",
+   rubric:"Each variable correctly identified (1pt each = 5pts) + explanation for each (1pt each = 5pts) = 10 points total. (a) Nominal - categories no order. (b) Ordinal - ranked but unequal intervals. (c) Interval - equal spacing assumed, no absolute zero. (d) Ratio - absolute zero exists. (e) Ordinal - ranks but unequal distances.",
+   model:"(a) Nominal — categories with no order. (b) Ordinal — ranked but unequal intervals. (c) Interval — assumed equal spacing, no absolute zero. (d) Ratio — has absolute zero (0 NTD = no income). (e) Ordinal — ranked but distances between ranks are unequal."},
+
+  {id:2,w:"Week 2",title:"Karl Popper & Falsification",
+   q:"Describe Karl Popper's main contribution to the philosophy of science. Use a concrete example to explain his idea of falsification.",
+   hints:"先寫核心主張（一兩句），再用經典例子（白天鵝/黑天鵝）說明，最後解釋為什麼否證比驗證重要。",
+   rubric:"Core claim of falsification (3pts) + concrete example (3pts) + implication for research (2pts) + clarity (2pts) = 10 points.",
+   model:"Popper proposed falsification — scientific theories must be falsifiable (capable of being proven wrong). Famous example: 'No number of white swans can prove all swans are white, but one black swan disproves it.' Implication: scientists should try to disprove hypotheses, not confirm them."},
+
+  {id:3,w:"Week 4",title:"Contingency Questions 條件問題",
+   q:"In questionnaires, sometimes it makes sense to use contingency questions. Please describe what a contingency question is, explain why it is useful, and write one complete example with response options.",
+   hints:"定義 contingency question → 為什麼有用（減少偏差）→ 寫出完整的「篩選題 + 追問題」含選項。",
+   rubric:"Definition (2pts) + why useful (2pts) + complete example with filter question and follow-up with options (4pts) + clarity (2pts) = 10 points.",
+   model:"A contingency question uses a filter question first, then follow-up only for specific respondents. Useful because it prevents overreporting. Example: Filter: 'Have you used AI chatbots for academic work this month?' (Yes/No). Follow-up (Yes only): 'How many times?' (1-2 / 3-5 / 6-10 / 10+)."},
+
+  {id:4,w:"Week 5",title:"Research Design 研究設計",
+   q:`You want to test: "Exposure to AI-generated news articles decreases readers' trust in journalism." Propose an experimental design including:\n(a) IV and how you would manipulate it\n(b) DV and how you would measure it\n(c) Experimental groups\n(d) How you would assign participants\n(e) One threat to internal validity and how to address it`,
+   hints:"按 (a)-(e) 逐項回答。IV 要說明具體操弄內容。DV 要寫量表。記得隨機分配。內部效度威脅要具體。",
+   rubric:"IV + manipulation (2pts) + DV + measurement (2pts) + groups (1pt) + random assignment (2pts) + threat + solution (2pts) + clarity (1pt) = 10 points.",
+   model:"(a) IV: Label on article (AI-generated vs human-written), same article for both. (b) DV: Trust in journalism, 5-item 7-point Likert scale. (c) Treatment: AI label; Control: journalist label. (d) Random assignment. (e) Differential attrition — monitor dropout rates in both groups."},
+
+  {id:5,w:"Week 2",title:"IV, DV, Unit of Analysis",
+   q:`Identify IV, DV, and unit of analysis for each:\n(a) "Newspapers with more online comments will have higher subscription rates."\n(b) "Students receiving AI tutoring will score higher on final exams than those receiving traditional lectures."\n(c) "Countries with higher press freedom will have lower political corruption."`,
+   hints:"IV = 預測/操弄變數，DV = 結果變數，Unit of analysis = 你在分析什麼層級的「個體」。",
+   rubric:"Each correctly identified (IV 1pt + DV 1pt + Unit 1pt) × 3 questions = 9pts + clarity 1pt = 10 points.",
+   model:"(a) IV: # comments, DV: subscription rate, Unit: newspapers. (b) IV: instruction type, DV: exam scores, Unit: students. (c) IV: press freedom, DV: corruption, Unit: countries (note: ecological fallacy risk)."},
+
+  {id:6,w:"Week 3",title:"Types of Validity 效度類型",
+   q:"Define the following types of validity and provide one concrete example for each: (a) face validity, (b) content validity, (c) criterion-related validity, (d) convergent validity, (e) discriminant validity.",
+   hints:"每個定義一兩句，例子要具體（不要只說「某量表」），Convergent 和 discriminant 是 construct validity 的兩面。",
+   rubric:"Each: definition (1pt) + example (1pt) × 5 = 10 points.",
+   model:"(a) Face: appears reasonable — attendance at religious services → religiosity. (b) Content: covers full range — media literacy test should cover multiple skills. (c) Criterion: predicts external standard — SAT predicts college GPA. (d) Convergent: related concepts correlate — political knowledge ~ political interest. (e) Discriminant: unrelated concepts don't correlate — political knowledge ~ food preference."},
+
+  {id:7,w:"Week 4",title:"Interpreting Statistics 統計量解讀",
+   q:`Treatment group (n=150): M=4.82, SD=1.23\nControl group (n=150): M=4.15, SD=1.31\nt(298)=4.52, p<0.001, 95% CI [0.38, 0.96]\n\nInterpret these results. What can the researcher conclude? What can they NOT conclude?`,
+   hints:"描述發現 → 解讀 p-value → 解讀 CI → 能做什麼結論（因果？因為是實驗）→ 不能做什麼（外部效度限制）。",
+   rubric:"Correct description (2pts) + p-value interpretation (2pts) + CI interpretation (2pts) + causal claim justified (2pts) + limitations (2pts) = 10 points.",
+   model:"Treatment > Control (0.67 difference). p<0.001: reject H₀, significant. 95% CI [0.38,0.96] doesn't include 0. CAN conclude causation (random experiment). CANNOT generalize to all contexts (external validity), long-term effects, or non-WEIRD populations."},
+
+  {id:8,w:"Week 2",title:"Hypothesis vs Research Question",
+   q:`Explain the difference between a hypothesis and a research question. Under what circumstances should a researcher use each? Provide one example of each related to "social media and mental health."`,
+   hints:"定義差異 → 什麼時候用哪個 → 各舉一個跟同主題有關的例子。",
+   rubric:"Definition of hypothesis (2pts) + definition of RQ (2pts) + when to use each (2pts) + examples (2pts each) = 10 points.",
+   model:"Hypothesis predicts a specific relationship (needs theory basis). RQ is open-ended (when little is known). Example H: 'Individuals spending >3hrs/day on Instagram report higher depression.' Example RQ: 'How do Taiwanese students perceive LINE group participation and emotional well-being?'"},
+
+  {id:9,w:"Week 4",title:"Sampling Strategies 抽樣策略",
+   q:"To study news consumption of all adult smartphone users in Taiwan (~18M), describe two probability and two nonprobability sampling methods. For each: explain the method, its advantages, and limitations.",
+   hints:"各描述兩種方法（共四種），每種寫方法說明、優點、在此情境的限制。",
+   rubric:"Each method: description (1pt) + advantage (0.5pt) + limitation (0.5pt) × 4 = 8pts + clarity 2pts = 10 points.",
+   model:"Probability: (1) Simple random — equal chance, but hard to get complete frame. (2) Stratified — divide by age/region, more precise, still needs frame. Nonprobability: (3) Convenience — fast/cheap via PTT/Dcard, biased toward young users. (4) Snowball — reaches hidden populations, but homogeneous sample."},
+
+  {id:10,w:"Week 6",title:"Content Analysis Process 內容分析流程",
+   q:"Describe the complete process of conducting a quantitative content analysis (at least 7 steps). Explain the role of Krippendorff's alpha and why it is better than percentage agreement.",
+   hints:"按順序列出 9 步驟，特別解釋編碼者間信度測試程序和 alpha 為什麼比百分比好。",
+   rubric:"Steps listed (5pts, at least 7) + Krippendorff's alpha explanation (2pts) + why better than percentage (2pts) + clarity (1pt) = 10 points.",
+   model:"9 steps: Research Q → Unit of collection → Sampling → Codebook → Code sheet → Intercoder reliability (random sample, 2 coders, calculate alpha, if <0.67 revise, 3-4 rounds) → Code full sample → Statistics → Report. Alpha accounts for chance agreement (percentage doesn't — 50/50 binary gives 50% by chance)."},
+
+  {id:11,w:"Week 2",title:"Deductive vs Inductive 演繹法 vs 歸納法",
+   q:"Compare the deductive and inductive approaches. For each: describe the process, give a communication research example, and state which method type is typically associated.",
+   hints:"方向、步驟、方法類型、具體例子。提到 Babbie 和 Keyton 不要混淆。",
+   rubric:"Deductive: process (2pts) + example (1pt) + method type (0.5pt). Inductive: same (3.5pts). Comparison clarity (2pts) + note about Babbie/Keyton (1pt) = 10 points.",
+   model:"Deductive: Theory→Hypothesis→Observation→Test. Quantitative. Example: Agenda-Setting Theory → H: more immigration coverage → higher importance rating → experiment. Inductive: Observation→Pattern→Conclusion→Theory. Qualitative. Example: Interview 20 journalists about AI → identify themes → build framework."},
+
+  {id:12,w:"Week 5",title:"Experimental Design Types 實驗設計類型",
+   q:"Explain between-subjects, within-subjects, and mixed designs. Give one advantage and disadvantage of each. Describe Pennycook et al. (2021) as a mixed design example.",
+   hints:"定義兩種設計，各寫一個優缺點，Pennycook 要說明哪部分是 between、哪部分是 within。",
+   rubric:"Between: definition (1pt) + pro/con (1pt). Within: same (2pts). Pennycook: between factor (1.5pts) + within factor (1.5pts) + finding (1pt) + clarity (2pts) = 10 points.",
+   model:"Between: different people in different groups (no carryover, but larger sample needed). Within: same person all conditions (less noise, but order effects). Pennycook: Between = accuracy prompt vs control; Within = 24 headlines (12 true, 12 false) for everyone. Result: treatment group shared less fake, more true news."},
+
+  {id:13,w:"Week 6",title:"R Basics R 基本觀念",
+   q:"(a) What is the output of c(TRUE, 'hello', 3) in R? Explain why.\n(b) What is the difference between a vector and a data frame?\n(c) A researcher runs a t-test and gets p = 0.03. What does this mean?",
+   hints:"(a) 型別優先順序 character > numeric > logical (b) 向量一種型別，資料框每欄可不同 (c) 不要說「證明假設」。",
+   rubric:"(a) Correct output + explanation (3pts). (b) Vector vs data frame (3pts). (c) p-value interpretation (3pts) + clarity (1pt) = 10 points.",
+   model:"(a) 'TRUE' 'hello' '3' — all become character (hierarchy: character > numeric > logical). (b) Vector: 1D, one type. Data frame: 2D, rows=observations, columns=variables, different types per column. (c) p=0.03 < 0.05, reject H₀, statistically significant. Does NOT prove hypothesis."},
+
+  // NEW QUESTIONS 14-20
+  {id:14,w:"Week 2",title:"Paradigms 研究典範",
+   q:"Define what a paradigm is according to Babbie. Describe the three main paradigms in social science (social scientific, interpretive, critical) and explain how they differ in their assumptions about reality and methods.",
+   hints:"先定義 paradigm（Babbie p.57），再比較三種典範的本體論（現實觀）、方法論、目的。",
+   rubric:"Definition (2pts) + Social scientific (2pts) + Interpretive (2pts) + Critical (2pts) + comparison clarity (2pts) = 10 points.",
+   model:"Paradigm = 'a model or frame of reference through which to observe and understand' (Babbie p.57). Social scientific: reality is observable, objective, quantitative/qualitative, seeks causal prediction. Interpretive: reality is socially constructed, subjective, qualitative, seeks understanding. Critical: reality shaped by power, normative stance, seeks to expose power structures."},
+
+  {id:15,w:"Week 3",title:"Reliability vs Validity 信度與效度",
+   q:"Explain the relationship between reliability and validity. Can a measure be reliable but not valid? Can it be valid but not reliable? Provide a concrete example for each scenario.",
+   hints:"說明兩者的關係，然後用具體例子說明「高信度低效度」和為什麼「低信度就不可能高效度」。",
+   rubric:"Relationship explanation (3pts) + reliable but not valid example (3pts) + valid requires reliable explanation (2pts) + clarity (2pts) = 10 points.",
+   model:"High reliability ≠ high validity. High validity requires high reliability. Example of reliable but not valid: measuring intelligence by shoe size — consistent results every time (reliable), but doesn't measure intelligence (not valid). Cannot be valid but unreliable: if measurements are inconsistent, they can't be consistently measuring the right thing."},
+
+  {id:16,w:"Week 4",title:"Total Survey Error Framework",
+   q:"Describe the Total Survey Error Framework (Salganik, ch 3.3). What are the two main categories of error? Give one specific example of each type and explain the Literary Digest 1936 case.",
+   hints:"Total error = representation errors + measurement errors。各舉例。Literary Digest 是覆蓋偏差的經典案例。",
+   rubric:"Framework structure (2pts) + representation errors + example (2pts) + measurement errors + example (2pts) + Literary Digest case (3pts) + clarity (1pt) = 10 points.",
+   model:"Total survey error = representation errors (who responds) + measurement errors (how questions are asked). Representation: coverage bias (sampling frame excludes groups), sampling error, nonresponse bias. Measurement: question wording, leading questions. Literary Digest 1936: sent 10M ballots from phone/car records → 2.4M replied → predicted Landon wins → wrong. Cause: coverage bias (rich people had phones/cars in 1936, biased toward Republicans)."},
+
+  {id:17,w:"Week 5",title:"Internal & External Validity",
+   q:"Define internal validity and external validity in the context of experimental design. List three threats to internal validity and explain each. Why do experiments typically have high internal validity but low external validity?",
+   hints:"定義兩種效度，列出至少三個內部效度威脅（history, maturation, testing, selection, differential attrition），解釋實驗的 trade-off。",
+   rubric:"Internal validity definition (2pts) + External validity definition (2pts) + 3 threats explained (3pts) + trade-off explanation (2pts) + clarity (1pt) = 10 points.",
+   model:"Internal validity: whether conclusions accurately reflect what happened in the experiment. External validity: whether results generalize to the real world. Threats: (1) History — external events during study. (2) Maturation — natural changes over time. (3) Differential attrition — unequal dropout rates. Trade-off: experiments control tightly (high internal) but controlled settings don't resemble real life (low external). Solution: replication and meta-analysis."},
+
+  {id:18,w:"Week 6",title:"Automated Content Analysis",
+   q:"Describe the instructor's recommended process for automated content analysis. What methods are available (list at least 4)? How should a researcher validate an automatic classifier? What threshold should be used?",
+   hints:"從最簡單到最複雜的方法順序，驗證用 confusion matrix 和 Kappa/alpha，門檻 0.67。",
+   rubric:"Recommended process/order (2pts) + 4+ methods listed (2pts) + validation process (3pts) + threshold (1pt) + clarity (2pts) = 10 points.",
+   model:"Start simple → complex: Keywords → Topic models (LDA/BERTopic) → Word embeddings (BERT) → Open source LLMs (Llama) → Commercial LLMs (ChatGPT/Claude). Always validate with several hundred manually labeled items. Use confusion matrix (TP/TN/FP/FN) and calculate Kappa or Krippendorff's alpha. Threshold: ≥ 0.67 (some say ≥ 0.6 is acceptable). Example: Jungherr & Rauchfleisch GPT validation achieved alpha = 0.81."},
+
+  {id:19,w:"Week 4",title:"Question Wording Effects",
+   q:"Explain how question wording can affect survey results. Use the Obama birthplace example from the slides (4 different wordings produced 58%-77% correct answers). Then explain what a double-barreled question is and give an example.",
+   hints:"Obama 例子說明同一事實四種措辭差異巨大。雙管問題定義 + 簡報中的範例。",
+   rubric:"Wording effects explanation (2pts) + Obama example details (3pts) + double-barreled definition (2pts) + example (2pts) + clarity (1pt) = 10 points.",
+   model:"Question wording significantly impacts results. Obama birthplace: 4 wordings ranged from 58% to 77% correct answers, showing how framing, response options, and context cues change responses. Double-barreled: asks two things in one question. Example: 'The US should abandon its space program AND spend the money on domestic programs' — respondent may agree with one but not the other. Solution: split into two separate questions."},
+
+  {id:20,w:"Week 5",title:"Pennycook et al. (2021) Study Analysis",
+   q:`Describe the Pennycook et al. (2021, Nature) study in detail:\n(a) What was the research question / hypothesis?\n(b) What was the experimental design (between/within/mixed)?\n(c) What were the IV(s) and DV?\n(d) What were the main findings?\n(e) Why is this considered a well-designed study?`,
+   hints:"這是 mixed design 的經典例子。Between = accuracy prompt vs control。Within = 24 headlines (12 true + 12 false)。結果是交叉交互效果。",
+   rubric:"Research question (1pt) + design type identified (2pts) + IV/DV (2pts) + findings (3pts) + why well-designed (2pts) = 10 points.",
+   model:"(a) Does shifting attention to accuracy reduce sharing of misinformation? (b) Mixed design. (c) Between-IV: accuracy prompt vs no prompt. Within-IV: true vs fake headlines (24 total). DV: sharing intention (1/0). (d) Treatment group less likely to share false headlines AND more likely to share true ones — crossover interaction. (e) Simple manipulation, large sample, preregistered, addresses real-world problem, published in Nature."},
+];
+
+// --- State ---
+let currentQid = 1;
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem('coreme_essay_records') || '{}'); } catch { return {}; }
+}
+function saveRecords(r) { localStorage.setItem('coreme_essay_records', JSON.stringify(r)); }
+function getApiKey() { return localStorage.getItem('coreme_api_key') || ''; }
+
+// --- Sidebar ---
+function renderSidebar() {
+  const records = getRecords();
+  const list = document.getElementById('qList');
+  list.innerHTML = QUESTIONS.map(q => {
+    const rec = records[q.id];
+    let badge = '';
+    if (rec && rec.grades && rec.grades.length > 0) {
+      const lastScore = rec.grades[rec.grades.length - 1].score;
+      badge = `<span class="q-badge graded">${lastScore}/10</span>`;
+    } else if (rec && rec.draft) {
+      badge = `<span class="q-badge draft">Draft</span>`;
+    }
+    return `<li class="${q.id === currentQid ? 'active' : ''}" onclick="selectQ(${q.id})">Q${q.id}. ${q.title} ${badge}</li>`;
+  }).join('');
+}
+
+function selectQ(id) {
+  // Save current draft before switching
+  saveDraft();
+  currentQid = id;
+  renderSidebar();
+  renderMain();
+}
+
+// --- Main ---
+function renderMain() {
+  const q = QUESTIONS.find(x => x.id === currentQid);
+  const records = getRecords();
+  const rec = records[q.id] || {};
+  const draft = rec.draft || '';
+  const grades = rec.grades || [];
+
+  let historyHtml = '';
+  if (grades.length > 0) {
+    historyHtml = `<div class="history-section"><h4>Past Attempts 歷史記錄 (${grades.length})</h4>`;
+    grades.slice().reverse().forEach((g, i) => {
+      historyHtml += `<div class="history-item">
+        <span class="h-date">${g.date}</span> — <span class="h-score">${g.score}/10</span>
+        <details style="margin-top:6px"><summary style="cursor:pointer;color:#64748b;font-size:12px">Show details</summary>
+        <div style="margin-top:8px;font-size:13px;color:#94a3b8"><strong>Your answer:</strong><br><div style="white-space:pre-wrap;color:#d1d5db;margin:4px 0 8px">${escHtml(g.answer)}</div><strong>Feedback:</strong><br><div style="white-space:pre-wrap;color:#d1d5db;margin-top:4px">${escHtml(g.feedback)}</div></div>
+        </details></div>`;
+    });
+    historyHtml += '</div>';
+  }
+
+  document.getElementById('mainArea').innerHTML = `
+    <div class="question-card">
+      <div class="q-number">Question ${q.id} / ${QUESTIONS.length}</div>
+      <span class="q-week">${q.w}</span>
+      <div class="q-text">${escHtml(q.q)}</div>
+      <details class="q-hints"><summary>💡 答題提示 Hints</summary><div class="hint-content">${escHtml(q.hints)}</div></details>
+    </div>
+    <div class="answer-area">
+      <label>Your Answer 你的回答：</label>
+      <textarea id="answerInput" placeholder="Write your answer here in English...">${escHtml(draft)}</textarea>
+      <div class="char-count"><span id="charCount">${draft.length}</span> characters</div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-blue" onclick="submitForGrading()" id="gradeBtn">🤖 Submit for AI Grading</button>
+      <button class="btn btn-gray" onclick="saveDraft()">💾 Save Draft</button>
+      <button class="btn btn-green" onclick="toggleModelAnswer()">📖 Show Model Answer</button>
+      <button class="btn btn-gray" onclick="nextQ()">Next →</button>
+    </div>
+    <div class="grade-result" id="gradeResult"></div>
+    <div class="model-answer" id="modelAnswer">
+      <h4>📖 Model Answer 擬答</h4>
+      <div class="ma-text">${escHtml(q.model)}</div>
+    </div>
+    ${historyHtml}
+  `;
+
+  document.getElementById('answerInput').addEventListener('input', e => {
+    document.getElementById('charCount').textContent = e.target.value.length;
+  });
+}
+
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function saveDraft() {
+  const textarea = document.getElementById('answerInput');
+  if (!textarea) return;
+  const records = getRecords();
+  if (!records[currentQid]) records[currentQid] = {};
+  records[currentQid].draft = textarea.value;
+  saveRecords(records);
+  renderSidebar();
+}
+
+function toggleModelAnswer() {
+  document.getElementById('modelAnswer').classList.toggle('show');
+}
+
+function nextQ() {
+  saveDraft();
+  const idx = QUESTIONS.findIndex(q => q.id === currentQid);
+  if (idx < QUESTIONS.length - 1) selectQ(QUESTIONS[idx + 1].id);
+}
+
+// --- AI Grading ---
+async function submitForGrading() {
+  const answer = document.getElementById('answerInput').value.trim();
+  if (!answer) { alert('Please write an answer first! 請先寫答案！'); return; }
+  if (answer.length < 20) { alert('Answer is too short. Please write more. 答案太短，請多寫一些。'); return; }
+
+  const apiKey = getApiKey();
+  if (!apiKey) { showApiModal(); return; }
+
+  const q = QUESTIONS.find(x => x.id === currentQid);
+  const gradeEl = document.getElementById('gradeResult');
+  const btn = document.getElementById('gradeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Grading...';
+  gradeEl.className = 'grade-result show';
+  gradeEl.innerHTML = '<div class="loading"><div class="spinner"></div><br>AI is grading your answer...<br>AI 正在批改你的回答...</div>';
+
+  const systemPrompt = `You are a strict but fair university exam grader for a Communication Research Methods course (COREME) at NTU, taught by Prof. Adrian Rauchfleisch. Grade the student's answer out of 10 points.
+
+RUBRIC: ${q.rubric}
+
+MODEL ANSWER (for reference): ${q.model}
+
+RESPOND IN THIS EXACT FORMAT:
+SCORE: [number]/10
+
+STRENGTHS:
+[What the student did well, in Chinese]
+
+WEAKNESSES:
+[What was missing or incorrect, in Chinese]
+
+DETAILED FEEDBACK:
+[Specific, constructive feedback with corrections, in Chinese. Reference the rubric. Tell them exactly what to add or fix to get full marks.]
+
+KEY TERMS TO INCLUDE:
+[List any important English terms the student should have used but didn't]`;
+
+  const userMsg = `QUESTION:\n${q.q}\n\nSTUDENT'S ANSWER:\n${answer}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const feedback = data.content[0].text;
+
+    // Parse score
+    const scoreMatch = feedback.match(/SCORE:\s*(\d+)\s*\/\s*10/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : '?';
+
+    // Save record
+    const records = getRecords();
+    if (!records[currentQid]) records[currentQid] = {};
+    if (!records[currentQid].grades) records[currentQid].grades = [];
+    records[currentQid].grades.push({
+      date: new Date().toLocaleString('zh-TW'),
+      answer: answer,
+      score: score,
+      feedback: feedback
+    });
+    records[currentQid].draft = '';
+    saveRecords(records);
+
+    // Display
+    const scoreColor = score >= 8 ? '#4ade80' : score >= 6 ? '#fbbf24' : '#f87171';
+    gradeEl.innerHTML = `
+      <div class="grade-score"><span class="score-num" style="color:${scoreColor}">${score}</span><span class="score-total"> / 10</span></div>
+      <div class="grade-feedback">${escHtml(feedback)}</div>
+    `;
+
+    renderSidebar();
+  } catch (err) {
+    gradeEl.innerHTML = `<div style="color:#f87171;padding:16px">Error: ${escHtml(err.message)}<br><br>Please check your API key and try again.</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 Submit for AI Grading';
+  }
+}
+
+// --- API Key Modal ---
+function showApiModal() { document.getElementById('apiModal').classList.add('show'); }
+function closeApiModal() { document.getElementById('apiModal').classList.remove('show'); }
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) {
+    localStorage.setItem('coreme_api_key', key);
+    updateApiStatus();
+    closeApiModal();
+  }
+}
+function updateApiStatus() {
+  const el = document.getElementById('apiStatus');
+  if (getApiKey()) {
+    el.className = 'api-status ok';
+    el.textContent = '✓ API Key Set';
+    el.onclick = showApiModal;
+  } else {
+    el.className = 'api-status no';
+    el.textContent = 'Click to set API Key';
+    el.onclick = showApiModal;
+  }
+}
+
+// --- Export ---
+function exportHistory() {
+  const records = getRecords();
+  let md = '# COREME Essay Practice Records\n\n';
+  QUESTIONS.forEach(q => {
+    const rec = records[q.id];
+    if (rec && rec.grades && rec.grades.length > 0) {
+      md += `## Q${q.id}: ${q.title}\n\n`;
+      rec.grades.forEach((g, i) => {
+        md += `### Attempt ${i + 1} — ${g.date} — Score: ${g.score}/10\n\n`;
+        md += `**Your Answer:**\n${g.answer}\n\n`;
+        md += `**AI Feedback:**\n${g.feedback}\n\n---\n\n`;
+      });
+    }
+  });
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `coreme_essay_records_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Init ---
+updateApiStatus();
+renderSidebar();
+renderMain();
+</script>
+</body>
+</html>
