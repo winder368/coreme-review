@@ -331,10 +331,38 @@ const ZH = [
   {q:"在 R 中，c(1, TRUE, FALSE, 555) 產生：",o:["1 1 0 555","1 'TRUE' 'FALSE' 555","'1' 'TRUE' 'FALSE' '555'","錯誤"]}
 ]
 
+// --- Per-question option shuffle ---
+// shuffledOpts[qid] = { order: [2,0,3,1], correctPos: newIndex }
+// order[i] = original index that goes to display position i
+let shuffledOpts = {};
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getShuffled(qid) {
+  if (!shuffledOpts[qid]) {
+    const q = ALL_QUESTIONS[qid];
+    const order = shuffleArray([0, 1, 2, 3]);
+    const correctPos = order.indexOf(q.a);
+    shuffledOpts[qid] = { order, correctPos };
+  }
+  return shuffledOpts[qid];
+}
+
+function reshuffleAll() {
+  shuffledOpts = {};
+}
+
 // --- State ---
 let questions = [...ALL_QUESTIONS];
 let currentIndex = 0;
-let sessionAnswered = {};
+let sessionAnswered = {};  // qid -> display position chosen
 let correctTotal = 0;
 let wrongTotal = 0;
 let activeFilter = "All";
@@ -428,13 +456,19 @@ function toggleLang() {
 }
 
 function getQText(q) {
-  if (lang === 'en') return { qt: q.q, ot: q.o };
   const qid = ALL_QUESTIONS.indexOf(q);
-  if (qid >= 0 && qid < ZH.length) return { qt: ZH[qid].q, ot: ZH[qid].o };
-  return { qt: q.q, ot: q.o };
+  const sh = getShuffled(qid);
+  if (lang === 'en') {
+    return { qt: q.q, ot: sh.order.map(i => q.o[i]), correctPos: sh.correctPos };
+  }
+  if (qid >= 0 && qid < ZH.length) {
+    return { qt: ZH[qid].q, ot: sh.order.map(i => ZH[qid].o[i]), correctPos: sh.correctPos };
+  }
+  return { qt: q.q, ot: sh.order.map(i => q.o[i]), correctPos: sh.correctPos };
 }
 
 function shuffleCards() {
+  reshuffleAll();
   for (let i = questions.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [questions[i], questions[j]] = [questions[j], questions[i]];
@@ -444,6 +478,7 @@ function shuffleCards() {
 }
 
 function resetSession() {
+  reshuffleAll();
   sessionAnswered = {};
   correctTotal = 0;
   wrongTotal = 0;
@@ -482,8 +517,8 @@ function renderCard() {
   const q = questions[currentIndex];
   const qid = ALL_QUESTIONS.indexOf(q);
   const isAnswered = sessionAnswered[qid] !== undefined;
-  const wasCorrect = isAnswered && sessionAnswered[qid] === q.a;
-  const { qt, ot } = getQText(q);
+  const { qt, ot, correctPos } = getQText(q);
+  const wasCorrect = isAnswered && sessionAnswered[qid] === correctPos;
 
   let optionsHtml = '';
   ot.forEach((opt, i) => {
@@ -491,19 +526,19 @@ function renderCard() {
     let cls = '';
     if (isAnswered) {
       cls = 'disabled ';
-      if (i === q.a) cls += 'show-correct';
-      else if (i === sessionAnswered[qid] && sessionAnswered[qid] !== q.a) cls += 'wrong-answer';
+      if (i === correctPos) cls += 'show-correct';
+      else if (i === sessionAnswered[qid] && sessionAnswered[qid] !== correctPos) cls += 'wrong-answer';
     }
     optionsHtml += `<li class="${cls}" data-idx="${i}" onclick="selectOption(${i})">(${letter}) ${opt}</li>`;
   });
 
-  const correctLetter = String.fromCharCode(65 + q.a);
+  const correctLetter = String.fromCharCode(65 + correctPos);
   const wrongMark = getWrongList().includes(qid) ? ' <span style="color:#f87171;font-size:12px;">\u2717 in wrong list</span>' : '';
 
   let explanationHtml = '';
   if (isAnswered) {
     const icon = wasCorrect ? '\u2705' : '\u274c';
-    const resultText = wasCorrect ? (lang==='zh'?'正確！':'Correct!') : `${lang==='zh'?'錯誤！答案':'Wrong! Answer'}: (${correctLetter}) ${ot[q.a]}`;
+    const resultText = wasCorrect ? (lang==='zh'?'正確！':'Correct!') : `${lang==='zh'?'錯誤！答案':'Wrong! Answer'}: (${correctLetter}) ${ot[correctPos]}`;
     const resultColor = wasCorrect ? '#4ade80' : '#f87171';
     explanationHtml = `
       <div class="explanation-box show">
@@ -538,10 +573,11 @@ function selectOption(idx) {
   const qid = ALL_QUESTIONS.indexOf(q);
   if (sessionAnswered[qid] !== undefined) return;
 
+  const { correctPos } = getShuffled(qid);
   sessionAnswered[qid] = idx;
-  if (idx === q.a) {
+  if (idx === correctPos) {
     correctTotal++;
-    removeFromWrong(qid);  // If previously wrong, remove from wrong list on correct answer
+    removeFromWrong(qid);
   } else {
     wrongTotal++;
     addToWrong(qid);
