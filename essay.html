@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
-.header{background:#1e293b;padding:14px 20px;border-bottom:2px solid #2e75b6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.header{background:#1e293b;padding:14px 20px;border-bottom:2px solid #2e75b6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:relative;z-index:20}
 .header h1{font-size:17px;color:#93c5fd}
 .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .api-status{font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer}
@@ -295,7 +295,8 @@ function initTypeFilters(){
 
 function renderSidebar(){
   const records=getRecords();
-  const filtered=activeType==='All'?Q:Q.filter(q=>q.t===activeType);
+  const typeOrder={A:0,B:1,C:2,D:3};
+  const filtered=(activeType==='All'?Q:Q.filter(q=>q.t===activeType)).slice().sort((a,b)=>typeOrder[a.t]-typeOrder[b.t]||a.id-b.id);
   document.getElementById('qList').innerHTML=filtered.map(q=>{
     const rec=records[q.id];
     let badge='';
