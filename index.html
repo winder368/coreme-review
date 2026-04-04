@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COREME Midterm Flashcards — 100 Questions</title>
+<title>COREME Midterm Flashcards — 120 Questions</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
@@ -153,7 +153,7 @@
 <body>
 
 <div class="header">
-  <h1>COREME 期中考 Flashcards</h1>
+  <h1>COREME 期中考 Flashcards (120)</h1>
   <div class="stats">
     <span>Score: <span class="correct" id="correctCount">0</span>✓ <span class="wrong" id="wrongCount">0</span>✗</span>
     <span id="pctDisplay">0%</span>
@@ -285,7 +285,28 @@ const ALL_QUESTIONS = [
   {q:"The instructor recommends starting automated content analysis with:",o:["Commercial APIs like ChatGPT","Neural network classifiers","The simplest method (e.g., keywords)","Fine-tuned LLMs"],a:2,w:"Week 6",e:"老師建議的順序：Keywords（最簡單）→ Transformer models → Fine-tuning → ChatGPT（最複雜）。從最簡單的開始試，如果效果好就不需要更複雜的方法。永遠要用幾百筆人工標記的資料驗證。Kappa/K-alpha \u2265 0.6 就可以繼續。"},
   {q:"In Jungherr & Rauchfleisch's GPT validation, Krippendorff's alpha was:",o:["0.67","0.95","0.81","0.50"],a:2,w:"Week 6",e:"在 Jungherr & Rauchfleisch 的研究中，用 50 筆隨機樣本做驗證：兩位人工編碼者 + GPT 分類器的 Krippendorff's alpha = 0.81，遠超 0.67 門檻。這說明 GPT 在這個任務上的表現與人工編碼者相當。"},
   {q:"In R, vectors have a type hierarchy of:",o:["character > logical > numeric","logical > numeric > character","numeric > character > logical","character > numeric > logical"],a:3,w:"Week 6",e:"R 向量的型別優先順序：character > numeric > logical。混合不同型別時，R 自動轉換成最高優先的型別。例如 c(TRUE, \"hello\", 3) → 全部變 character：\"TRUE\" \"hello\" \"3\"。"},
-  {q:"In R, c(1, TRUE, FALSE, 555) produces:",o:["1 1 0 555","1 'TRUE' 'FALSE' 555","'1' 'TRUE' 'FALSE' '555'","An error"],a:0,w:"Week 6",e:"這裡只有 numeric 和 logical 兩種型別，numeric 優先級更高，所以 logical 被轉換成 numeric：TRUE \u2192 1，FALSE \u2192 0。結果是數值向量 1 1 0 555。如果有 character（如加入 \"hello\"），全部都會變成 character。"}
+  {q:"In R, c(1, TRUE, FALSE, 555) produces:",o:["1 1 0 555","1 'TRUE' 'FALSE' 555","'1' 'TRUE' 'FALSE' '555'","An error"],a:0,w:"Week 6",e:"這裡只有 numeric 和 logical 兩種型別，numeric 優先級更高，所以 logical 被轉換成 numeric：TRUE \u2192 1，FALSE \u2192 0。結果是數值向量 1 1 0 555。如果有 character（如加入 \"hello\"），全部都會變成 character。"},
+  // === Week R: R Code ===
+  {q:"In R, running class(c(TRUE, 5, \"hello\")) returns:",o:["\"numeric\"","\"logical\"","\"character\"","\"mixed\""],a:2,w:"Week R",e:"R 向量只能存一種型別。c(TRUE, 5, \"hello\") 混入 logical、numeric、character 三種。型別優先順序：character > numeric > logical，所以 TRUE → \"TRUE\"，5 → \"5\"，全部強制轉換為 character。class() 回傳 \"character\"。"},
+  {q:"A researcher runs t.test() and gets p-value = 0.004. The correct conclusion is:",o:["We accept H₀ as true","We fail to reject H₀","We reject H₀; the result is statistically significant","The result is inconclusive without an effect size"],a:2,w:"Week R",e:"p = 0.004 < 0.05，拒絕虛無假設（H₀），結果達統計顯著。注意：不是「H₁ 為真」也不是「接受 H₀」——p 值告訴你的是「在 H₀ 為真的情況下，觀察到這樣結果的機率」。"},
+  {q:"t.test output: mean of x (treatment) = 3.82, mean of y (control) = 4.35. Which group scored higher?",o:["Treatment group (M = 3.82)","Control group (M = 4.35)","Both groups scored equally","Cannot be determined from this output"],a:1,w:"Week R",e:"直接比較兩平均數：treatment (x) = 3.82，control (y) = 4.35。4.35 > 3.82，控制組信任分數更高。t 值為負（t = -2.89）也印證了 x < y。"},
+  {q:"The minimum acceptable value for Krippendorff's alpha in content analysis is:",o:["0.50","0.60","0.80","0.67"],a:3,w:"Week R",e:"Krippendorff's alpha ≥ 0.67 才算可接受的編碼者間信度。低於此值需要：討論不一致案例 → 修改 codebook → 重新取隨機樣本 → 再測，通常需 3-4 輪。"},
+  {q:"After getting kripp.alpha = 0.55 (below threshold), what should a researcher do FIRST?",o:["Discuss disagreements and revise the codebook","Accept the results since 0.55 is close enough","Use only one coder to avoid inconsistency","Increase the total sample size"],a:0,w:"Week R",e:"標準流程第一步：兩位編碼者討論不一致案例，找出分歧原因，修改 codebook 讓定義更清晰。接著取新的隨機樣本（不能用同一批）重新測試。不可接受 0.55，必須達到 ≥ 0.67。"},
+  {q:"In a confusion matrix, a False Negative (FN) means the classifier:",o:["Correctly detected a positive case","Flagged a negative as positive (false alarm)","Correctly identified a negative case","Missed an actual positive and labeled it negative"],a:3,w:"Week R",e:"False Negative（假陰性 / Type II Error）= 實際是正例，但分類器預測為負例。在癌症篩查中，FN 比 FP 更嚴重——病人實際有癌症卻被告知沒事，延誤治療。"},
+  {q:"A False Positive (FP) in classifier evaluation corresponds to:",o:["Type II Error (β)","Type I Error (α)","True Positive Rate (Sensitivity)","Negative Predictive Value"],a:1,w:"Week R",e:"False Positive = Type I Error（α）：實際是負例，分類器卻預測為正例（誤報）。FP 對應顯著性水準 α（通常設 0.05）。False Negative = Type II Error（β）——兩者是不同方向的錯誤。"},
+  {q:"Confusion matrix: TP=45, FP=10, FN=5, TN=40. What is the overall accuracy?",o:["45%","90%","85%","75%"],a:2,w:"Week R",e:"Accuracy = (TP + TN) / 總案例數 = (45 + 40) / (45 + 40 + 10 + 5) = 85 / 100 = 85%。注意：資料不平衡時 accuracy 會有誤導性，還需要看 precision 和 recall。"},
+  {q:"In R, what does nrow(df) return?",o:["Number of columns","Number of rows","A list of column names","The class of each column"],a:1,w:"Week R",e:"nrow(df) 回傳資料框的列數（觀察值數量）。ncol(df) 回傳欄數（變數數量）。dim(df) 同時回傳兩者：c(rows, cols)。"},
+  {q:"In R, head(df) displays by default:",o:["Last 6 rows","Summary statistics","First 6 rows","All column names"],a:2,w:"Week R",e:"head(df) 預設顯示前 6 列（rows）。可用 head(df, 10) 改為前 10 列。tail(df) 顯示最後 6 列。初步檢查資料格式最快的方式。"},
+  {q:"In R, str(df) shows:",o:["A plot of each variable's distribution","Only the first row","Descriptive stats (mean, min, max)","Structure: variable names, types, and first few values"],a:3,w:"Week R",e:"str(df) 顯示資料框結構：每個變數的名稱、型別（int / chr / num / Factor / logi）和前幾個值。探索陌生資料集的第一步，搭配 head() 和 summary() 使用。"},
+  {q:"In R, mean(c(1, 2, NA)) returns by default:",o:["1.5","2","3","NA"],a:3,w:"Week R",e:"資料含 NA 時，R 的 mean() 預設回傳 NA。必須加 na.rm = TRUE 才會忽略 NA 計算：mean(c(1, 2, NA), na.rm = TRUE) = 1.5。sd()、sum()、median() 也適用相同規則。"},
+  {q:"In R, mean(c(1, 2, NA), na.rm = TRUE) returns:",o:["1.5","NA","2","Error: cannot handle NA"],a:0,w:"Week R",e:"na.rm = TRUE 讓 R 忽略 NA 後計算。剩下 c(1, 2)，平均 = (1+2)/2 = 1.5。這個參數是處理缺失值最常用的方式。"},
+  {q:"In R, how do you access the column 'trust' from data frame 'df'?",o:["df[trust]","df->trust","df.trust","df$trust"],a:3,w:"Week R",e:"R 用 $ 運算子存取資料框欄位：df$trust。也可以用 df[[\"trust\"]] 或 df[, \"trust\"]，但 $ 最直觀常用。"},
+  {q:"In R, class(TRUE) returns:",o:["\"logical\"","\"numeric\"","\"integer\"","\"character\""],a:0,w:"Week R",e:"TRUE / FALSE 是 R 的 logical 型別，class(TRUE) 回傳 \"logical\"。在數值運算中 TRUE → 1、FALSE → 0（numeric coercion）。"},
+  {q:"In R, the <- operator is used for:",o:["Comparing two values (less-than check)","Variable assignment","The pipe operator (passing output forward)","Negative index subsetting"],a:1,w:"Week R",e:"<- 是 R 的賦值運算子：x <- 5 把 5 賦給 x。慣例上 R 用 <- 而非 =（雖然 = 也能運作）。注意：<= 是比較（小於等於），<- 是賦值，兩者不同。"},
+  {q:"The Central Limit Theorem states that as sample size grows, the sampling distribution of the mean:",o:["Becomes identical to the population distribution","Becomes approximately normal regardless of population shape","Becomes more skewed toward extremes","Becomes uniform (rectangular)"],a:1,w:"Week R",e:"中央極限定理（CLT）：不管母體分布形狀，樣本數夠大（通常 n ≥ 30）時，樣本平均數的抽樣分布趨近常態分布。這是 t 檢定等參數統計方法成立的基礎。"},
+  {q:"In R, sd() calculates:",o:["The arithmetic mean of all values","The median (50th percentile)","The average distance from the mean (standard deviation)","The range (max minus min)"],a:2,w:"Week R",e:"sd() 計算標準差（standard deviation）：每個觀察值與平均數距離的均方根。公式：sqrt(sum((x - mean(x))²) / (n-1))。標準差大→資料分散；標準差小→資料集中。"},
+  {q:"In R, which function runs an independent samples t-test?",o:["anova()","cor()","chisq.test()","t.test()"],a:3,w:"Week R",e:"t.test(group1$var, group2$var) 執行獨立樣本 t 檢定。anova() 用於變異數分析，cor() 計算相關係數，chisq.test() 做卡方檢定（用於類別變數）。"},
+  {q:"In R, the kripp.alpha() function for intercoder reliability comes from which package?",o:["psych","irr","stats","dplyr"],a:1,w:"Week R",e:"kripp.alpha() 來自 irr 套件（inter-rater reliability）。安裝：install.packages(\"irr\")，載入：library(irr)。psych 套件有 alpha()（Cronbach's alpha）。stats 是 R 基礎套件，dplyr 用於資料整理。"}
 ]
 
 // --- Chinese Translations ---
@@ -389,7 +410,27 @@ const ZH = [
   {q:"老師建議自動內容分析的起點是：",o:["商業 API 如 ChatGPT","神經網路分類器","最簡單的方法（如關鍵字）","微調過的大型語言模型"]},
   {q:"在 Jungherr & Rauchfleisch 的 GPT 驗證中，Krippendorff's alpha 是：",o:["0.67","0.95","0.81","0.50"]},
   {q:"在 R 中，向量的型別優先順序是：",o:["character > logical > numeric","logical > numeric > character","numeric > character > logical","character > numeric > logical"]},
-  {q:"在 R 中，c(1, TRUE, FALSE, 555) 產生：",o:["1 1 0 555","1 'TRUE' 'FALSE' 555","'1' 'TRUE' 'FALSE' '555'","錯誤"]}
+  {q:"在 R 中，c(1, TRUE, FALSE, 555) 產生：",o:["1 1 0 555","1 'TRUE' 'FALSE' 555","'1' 'TRUE' 'FALSE' '555'","錯誤"]},
+  {q:"在 R 中，class(c(TRUE, 5, \"hello\")) 回傳：",o:["\"numeric\"","\"logical\"","\"character\"","\"mixed\""]},
+  {q:"研究者執行 t.test() 得到 p 值 = 0.004，正確結論是：",o:["接受 H₀ 為真","無法拒絕 H₀","拒絕 H₀；結果達統計顯著","沒有效果量無法下結論"]},
+  {q:"t.test 輸出：treatment 組平均 3.82，control 組平均 4.35。哪組信任分數更高？",o:["實驗組（M = 3.82）","控制組（M = 4.35）","兩組相同","無法從輸出判斷"]},
+  {q:"內容分析中 Krippendorff's alpha 的最低可接受值是：",o:["0.50","0.60","0.80","0.67"]},
+  {q:"得到 kripp.alpha = 0.55（低於門檻），研究者應該先做什麼？",o:["討論不一致案例並修改 codebook","接受結果因為 0.55 已接近門檻","只用一位編碼者","增加總樣本數"]},
+  {q:"在混淆矩陣中，False Negative（FN）表示分類器：",o:["正確偵測到正例","將負例誤標為正例","正確辨識負例","漏掉實際正例並標記為負例"]},
+  {q:"False Positive（FP）對應的是：",o:["Type II Error（β）","Type I Error（α）","真陽性率（Sensitivity）","負向預測值"]},
+  {q:"混淆矩陣：TP=45, FP=10, FN=5, TN=40，整體準確率是：",o:["45%","90%","85%","75%"]},
+  {q:"在 R 中，nrow(df) 回傳什麼？",o:["欄數（變數數量）","列數（觀察值數量）","欄位名稱列表","每欄的資料型別"]},
+  {q:"在 R 中，head(df) 預設顯示：",o:["最後 6 列","摘要統計","前 6 列","所有欄位名稱"]},
+  {q:"在 R 中，str(df) 顯示：",o:["每個變數的分布圖","只有第一列資料","描述統計（平均、最大、最小）","結構：變數名稱、型別和前幾個值"]},
+  {q:"在 R 中，mean(c(1, 2, NA)) 預設回傳：",o:["1.5","2","3","NA"]},
+  {q:"在 R 中，mean(c(1, 2, NA), na.rm = TRUE) 回傳：",o:["1.5","NA","2","Error：含有 NA"]},
+  {q:"在 R 中，如何存取資料框 'df' 的 'trust' 欄位？",o:["df[trust]","df->trust","df.trust","df$trust"]},
+  {q:"在 R 中，class(TRUE) 回傳：",o:["\"logical\"","\"numeric\"","\"integer\"","\"character\""]},
+  {q:"在 R 中，<- 運算子的用途是：",o:["比較兩個值大小","變數賦值","管道運算子（傳遞輸出）","負索引取值"]},
+  {q:"中央極限定理指出，隨著樣本數增加，平均數的抽樣分布：",o:["與母體分布完全相同","不論母體形狀如何趨近常態分布","越來越偏態","趨近均勻分布"]},
+  {q:"在 R 中，sd() 計算：",o:["所有值的算術平均","中位數（第 50 百分位數）","每個值與平均數的平均距離（標準差）","全距（最大值減最小值）"]},
+  {q:"在 R 中，哪個函數用來進行獨立樣本 t 檢定？",o:["anova()","cor()","chisq.test()","t.test()"]},
+  {q:"在 R 中，kripp.alpha() 函數來自哪個套件？",o:["psych","irr","stats","dplyr"]}
 ]
 
 // --- Per-question option shuffle ---
