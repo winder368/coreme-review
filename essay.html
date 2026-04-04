@@ -92,6 +92,17 @@ body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;c
 
 @media(max-width:768px){.sidebar{position:relative;width:100%;height:auto;max-height:180px;padding-top:0}.main{margin-left:0}}
 
+/* ── Flag / Bookmark ── */
+.flag-btn{background:none;border:none;cursor:pointer;font-size:15px;padding:2px 5px;opacity:0.3;transition:opacity .15s,transform .15s;line-height:1}
+.flag-btn:hover{opacity:1;transform:scale(1.2)}
+.flag-btn.flagged{opacity:1}
+.q-badge.flagged{background:#78350f;color:#fbbf24}
+.flag-type-btn{border-color:#f59e0b !important;color:#f59e0b !important}
+.flag-type-btn.active{background:#78350f !important;color:white !important;border-color:#78350f !important}
+body.light .flag-type-btn{border-color:#d97706 !important;color:#d97706 !important}
+body.light .flag-type-btn.active{background:#92400e !important;color:white !important;border-color:#92400e !important}
+body.light .q-badge.flagged{background:#fef3c7;color:#92400e}
+
 /* ── Light Mode ── */
 body.light{background:#FAF6F0;color:#2D2A26}
 body.light .header{background:#F0E8DF;border-bottom-color:#2e75b6}
@@ -284,10 +295,10 @@ function getApiKey(){return localStorage.getItem('coreme_api_key')||''}
 
 function initTypeFilters(){
   const el=document.getElementById('typeFilters');
-  ['All','A','B','C','D'].forEach(t=>{
+  ['All','A','B','C','D','📌'].forEach(t=>{
     const btn=document.createElement('button');
-    btn.textContent=t==='All'?'All':t;
-    btn.className=t===activeType?'active':'';
+    btn.textContent=t==='All'?'All':t==='📌'?'📌':t;
+    btn.className=(t===activeType?'active':'')+(t==='📌'?' flag-type-btn':'');
     btn.onclick=()=>{activeType=t;document.querySelectorAll('.type-filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderSidebar()};
     el.appendChild(btn);
   });
@@ -296,12 +307,14 @@ function initTypeFilters(){
 function renderSidebar(){
   const records=getRecords();
   const typeOrder={A:0,B:1,C:2,D:3};
-  const filtered=(activeType==='All'?Q:Q.filter(q=>q.t===activeType)).slice().sort((a,b)=>typeOrder[a.t]-typeOrder[b.t]||a.id-b.id);
+  const base=activeType==='All'?Q:activeType==='📌'?Q.filter(q=>isFlagged(q.id)):Q.filter(q=>q.t===activeType);
+  const filtered=base.slice().sort((a,b)=>typeOrder[a.t]-typeOrder[b.t]||a.id-b.id);
   document.getElementById('qList').innerHTML=filtered.map(q=>{
     const rec=records[q.id];
     let badge='';
-    if(rec&&rec.grades&&rec.grades.length>0){const s=rec.grades[rec.grades.length-1].score;badge=`<span class="q-badge graded">${s}pts</span>`}
-    else if(rec&&rec.draft)badge='<span class="q-badge draft">Draft</span>';
+    if(isFlagged(q.id))badge+='<span class="q-badge flagged">📌</span>';
+    if(rec&&rec.grades&&rec.grades.length>0){const s=rec.grades[rec.grades.length-1].score;badge+=`<span class="q-badge graded">${s}pts</span>`}
+    else if(rec&&rec.draft)badge+='<span class="q-badge draft">Draft</span>';
     return `<li class="${q.id===currentQid?'active':''}" onclick="selectQ(${q.id})"><span class="type-tag ${q.t}">${q.t}</span>Q${q.id} ${q.title} ${badge}</li>`;
   }).join('');
 }
@@ -327,10 +340,13 @@ function renderMain(){
 
   document.getElementById('mainArea').innerHTML=`
     <div class="question-card">
-      <div class="q-header">
-        <span class="q-number">Q${q.id}/${Q.length}</span>
-        <span class="type-tag ${q.t}" style="font-size:11px">${TYPES[q.t]}</span>
-        <span class="q-week">${q.w}</span>
+      <div class="q-header" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="q-number">Q${q.id}/${Q.length}</span>
+          <span class="type-tag ${q.t}" style="font-size:11px">${TYPES[q.t]}</span>
+          <span class="q-week">${q.w}</span>
+        </div>
+        <button class="flag-btn ${isFlagged(q.id)?'flagged':''}" onclick="toggleFlag(${q.id})" title="${isFlagged(q.id)?'取消標記 Remove flag':'標記複習 Flag for review'}">📌</button>
       </div>
       <div class="q-text">${qText}</div>
       <div class="q-word-target">Target: ${q.t==='A'?'1-2 sentences':q.t==='D'?'2-4 sentences':'3-5 sentences'}</div>
@@ -366,7 +382,7 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function toggleHint(){document.getElementById('hintBox').classList.toggle('show')}
 function toggleModel(){document.getElementById('modelAnswer').classList.toggle('show')}
 function saveDraft(){const ta=document.getElementById('answerInput');if(!ta)return;const r=getRecords();if(!r[currentQid])r[currentQid]={};r[currentQid].draft=ta.value;saveRecords(r);renderSidebar()}
-function nextQ(){saveDraft();const i=Q.findIndex(q=>q.id===currentQid);const filtered=activeType==='All'?Q:Q.filter(q=>q.t===activeType);const ci=filtered.findIndex(q=>q.id===currentQid);if(ci<filtered.length-1)selectQ(filtered[ci+1].id)}
+function nextQ(){saveDraft();const typeOrder={A:0,B:1,C:2,D:3};const base=activeType==='All'?Q:activeType==='📌'?Q.filter(q=>isFlagged(q.id)):Q.filter(q=>q.t===activeType);const filtered=base.slice().sort((a,b)=>typeOrder[a.t]-typeOrder[b.t]||a.id-b.id);const ci=filtered.findIndex(q=>q.id===currentQid);if(ci<filtered.length-1)selectQ(filtered[ci+1].id)}
 
 async function submitGrade(){
   const ans=document.getElementById('answerInput').value.trim();
@@ -429,6 +445,12 @@ function exportHistory(){
   Q.forEach(q=>{const rec=r[q.id];if(rec&&rec.grades&&rec.grades.length>0){md+=`## Q${q.id}: ${q.title}\n\n`;rec.grades.forEach((g,i)=>{md+=`### Attempt ${i+1} — ${g.date} — ${g.score}pts\n\n**Answer:**\n${g.answer}\n\n**Feedback:**\n${g.feedback}\n\n---\n\n`})}});
   const blob=new Blob([md],{type:'text/markdown'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`coreme_practice_${new Date().toISOString().slice(0,10)}.md`;a.click();URL.revokeObjectURL(url);
 }
+
+// --- Flag / Bookmark ---
+function getFlagged(){try{return JSON.parse(localStorage.getItem('coreme_flagged_sa')||'[]')}catch{return[]}}
+function saveFlagged(l){localStorage.setItem('coreme_flagged_sa',JSON.stringify(l))}
+function isFlagged(id){return getFlagged().includes(id)}
+function toggleFlag(id){const l=getFlagged();const i=l.indexOf(id);if(i>=0)l.splice(i,1);else l.push(id);saveFlagged(l);renderSidebar();renderMain()}
 
 function initTheme(){const t=localStorage.getItem('coreme_theme')||'light';document.body.classList.toggle('light',t==='light');updateThemeBtn()}
 function toggleTheme(){const on=document.body.classList.toggle('light');localStorage.setItem('coreme_theme',on?'light':'dark');updateThemeBtn()}
