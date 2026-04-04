@@ -713,7 +713,7 @@ function selectOption(idx) {
   sessionAnswered[qid] = idx;
   if (idx === correctPos) {
     correctTotal++;
-    // Do NOT auto-remove from wrong list — user decides via button after seeing explanation
+    removeFromWrong(qid);
   } else {
     wrongTotal++;
     addToWrong(qid);
