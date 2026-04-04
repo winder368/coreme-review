@@ -91,6 +91,57 @@ body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;c
 .modal p{font-size:12px;color:#94a3b8;margin-bottom:10px;line-height:1.4}
 
 @media(max-width:768px){.sidebar{position:relative;width:100%;height:auto;max-height:180px;padding-top:0}.main{margin-left:0}}
+
+/* ── Light Mode ── */
+body.light{background:#FAF6F0;color:#2D2A26}
+body.light .header{background:#F0E8DF;border-bottom-color:#2e75b6}
+body.light .header h1{color:#1B5FAF}
+body.light .api-status.ok{background:#DCFCE7;color:#166534}
+body.light .api-status.no{background:#FEE2E2;color:#991b1b}
+body.light .btn-gray{background:#C9BDB2;color:#2D2A26}
+body.light .btn-gray:hover{background:#B5A99E}
+body.light .sidebar{background:#F0E8DF;border-right-color:#DDD5CB}
+body.light .sidebar h3{color:#8C837D}
+body.light .type-filters button{border-color:#C9BDB2;color:#5A524D}
+body.light .type-filters button.active{background:#2e75b6;color:white;border-color:#2e75b6}
+body.light .q-list li{color:#5A524D}
+body.light .q-list li:hover{background:#E8DDD4;color:#2D2A26}
+body.light .q-list li.active{background:#DBEAFE;border-left-color:#2e75b6;color:#1B5FAF}
+body.light .question-card{background:#FFFFFF;border-color:#DDD5CB}
+body.light .q-number{color:#8C837D}
+body.light .q-text{color:#1A1714}
+body.light .q-text code{background:#F0E8DF;color:#92400e}
+body.light .q-text pre{background:#F0E8DF;border-color:#DDD5CB;color:#92400e}
+body.light .q-word-target{color:#8C837D}
+body.light .hint-toggle{border-color:#C9BDB2;color:#92400e}
+body.light .hint-toggle:hover{background:#FFF7ED;border-color:#D97706}
+body.light .hint-strategy{background:#FFF7ED;border-left-color:#D97706;color:#92400e}
+body.light .hint-scaffold{background:#F0FDF4;border-left-color:#166534;color:#14532d}
+body.light .answer-area label{color:#5A524D}
+body.light .answer-area textarea{background:#FFFFFF;border-color:#C9BDB2;color:#2D2A26}
+body.light .answer-area textarea:focus{border-color:#2e75b6}
+body.light .answer-area .meta{color:#8C837D}
+body.light .grade-result{background:#FFF7ED;border-color:#DDD5CB}
+body.light .grade-score .sn{color:#1B5FAF}
+body.light .grade-score .st{color:#8C837D}
+body.light .grade-feedback{color:#3D3630}
+body.light .model-answer{background:#F0E8DF;border-color:#DDD5CB;color:#3D3630}
+body.light .model-answer h4{color:#166534}
+body.light .history-section{border-top-color:#DDD5CB}
+body.light .history-section h4{color:#5A524D}
+body.light .history-item{background:#FFFFFF;border-color:#DDD5CB;color:#3D3630}
+body.light .h-date{color:#8C837D}
+body.light .h-score{color:#1B5FAF}
+body.light .modal{background:#F0E8DF;border-color:#C9BDB2}
+body.light .modal h3{color:#1B5FAF}
+body.light .modal input{background:#FFFFFF;border-color:#C9BDB2;color:#2D2A26}
+body.light .modal p{color:#5A524D}
+body.light .loading{color:#5A524D}
+body.light .spinner{border-color:#DDD5CB;border-top-color:#2e75b6}
+.theme-btn{background:none;border:1px solid #475569;border-radius:8px;padding:3px 8px;cursor:pointer;font-size:15px;line-height:1.4;color:inherit;transition:border-color .2s}
+.theme-btn:hover{border-color:#93c5fd}
+body.light .theme-btn{border-color:#C9BDB2}
+body.light .theme-btn:hover{border-color:#1B5FAF}
 </style>
 </head>
 <body>
@@ -99,6 +150,7 @@ body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;c
   <div class="header-right">
     <span class="api-status no" id="apiStatus" onclick="showApiModal()">Set API Key</span>
     <button class="btn btn-gray" onclick="exportHistory()">Export</button>
+    <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 </div>
 <div class="sidebar">
@@ -377,7 +429,11 @@ function exportHistory(){
   const blob=new Blob([md],{type:'text/markdown'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`coreme_practice_${new Date().toISOString().slice(0,10)}.md`;a.click();URL.revokeObjectURL(url);
 }
 
-updateApi();initTypeFilters();renderSidebar();renderMain();
+function initTheme(){const t=localStorage.getItem('coreme_theme')||'light';document.body.classList.toggle('light',t==='light');updateThemeBtn()}
+function toggleTheme(){const on=document.body.classList.toggle('light');localStorage.setItem('coreme_theme',on?'light':'dark');updateThemeBtn()}
+function updateThemeBtn(){const btn=document.getElementById('themeToggle');if(btn)btn.textContent=document.body.classList.contains('light')?'🌙':'☀️'}
+
+initTheme();updateApi();initTypeFilters();renderSidebar();renderMain();
 </script>
 </body>
 </html>

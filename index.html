@@ -88,6 +88,52 @@
     .filters { padding: 8px 16px; }
     .container { padding: 16px 12px; }
   }
+
+  /* ── Light Mode ── */
+  body.light{background:#FAF6F0;color:#2D2A26}
+  body.light .header{background:#F0E8DF;border-bottom-color:#2e75b6}
+  body.light .header h1{color:#1B5FAF}
+  body.light .stats{color:#5A524D}
+  body.light .stats .correct{color:#166534}
+  body.light .stats .wrong{color:#991b1b}
+  body.light .filters{background:#F0E8DF;border-bottom-color:#DDD5CB}
+  body.light .filters button{border-color:#C9BDB2;color:#5A524D;background:transparent}
+  body.light .filters button:hover{border-color:#1B5FAF;color:#1B5FAF}
+  body.light .filters button.active{background:#2e75b6;color:white;border-color:#2e75b6}
+  body.light .filters .wrong-filter{border-color:#dc2626;color:#dc2626}
+  body.light .filters .wrong-filter.active{background:#991b1b;color:white;border-color:#991b1b}
+  body.light .wrong-count-badge{background:#991b1b;color:white}
+  body.light .progress-bar{background:#DDD5CB}
+  body.light .card-box{background:linear-gradient(135deg,#FFFFFF,#F7F0E9);border-color:#DDD5CB}
+  body.light .card-number{color:#8C837D}
+  body.light .question-text{color:#1A1714}
+  body.light .options li{background:#F0E8DF;border-color:#DDD5CB;color:#2D2A26}
+  body.light .options li:hover:not(.disabled){border-color:#2e75b6;background:#E8DDD4}
+  body.light .options li.selected{border-color:#2e75b6;background:#DBEAFE;color:#1B5FAF}
+  body.light .options li.correct-answer{border-color:#166534;background:#DCFCE7;color:#14532d}
+  body.light .options li.wrong-answer{border-color:#dc2626;background:#FEE2E2;color:#991b1b}
+  body.light .options li.show-correct{border-color:#166534;background:#DCFCE7;color:#14532d}
+  body.light .options li.disabled:hover{border-color:#DDD5CB;background:#F0E8DF}
+  body.light .explanation-box{background:#FFF7ED;border-left-color:#2e75b6}
+  body.light .exp-label{color:#1B5FAF}
+  body.light .exp-correct{color:#166534}
+  body.light .exp-text{color:#3D3630}
+  body.light .btn-prev,body.light .btn-next{background:#DDD5CB;color:#2D2A26}
+  body.light .btn-prev:hover,body.light .btn-next:hover{background:#C9BDB2}
+  body.light .card-counter{color:#5A524D}
+  body.light .action-btns button{background:#C9BDB2;color:#2D2A26}
+  body.light .action-btns button:hover{background:#B5A99E}
+  body.light .action-btns .clear-wrong{background:#FEE2E2;color:#991b1b}
+  body.light .action-btns .clear-wrong:hover{background:#FECACA}
+  body.light .lang-toggle .toggle-track{background:#C9BDB2}
+  body.light .lang-toggle span{color:#5A524D}
+  body.light .lang-toggle .active-lang{color:#1B5FAF}
+  body.light .keyboard-hint{color:#8C837D}
+  body.light .empty-msg{color:#8C837D}
+  .theme-btn{background:none;border:1px solid #475569;border-radius:8px;padding:3px 8px;cursor:pointer;font-size:15px;line-height:1.4;color:inherit;transition:border-color .2s}
+  .theme-btn:hover{border-color:#93c5fd}
+  body.light .theme-btn{border-color:#C9BDB2}
+  body.light .theme-btn:hover{border-color:#1B5FAF}
 </style>
 </head>
 <body>
@@ -107,6 +153,7 @@
       <div class="toggle-track" id="langToggle" onclick="toggleLang()"><div class="toggle-thumb"></div></div>
       <span id="langZH">中文</span>
     </div>
+    <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 </div>
 
@@ -610,7 +657,13 @@ document.addEventListener('keydown', e => {
   else if (e.key >= '1' && e.key <= '4') selectOption(parseInt(e.key) - 1);
 });
 
+// --- Theme ---
+function initTheme(){const t=localStorage.getItem('coreme_theme')||'light';document.body.classList.toggle('light',t==='light');updateThemeBtn()}
+function toggleTheme(){const on=document.body.classList.toggle('light');localStorage.setItem('coreme_theme',on?'light':'dark');updateThemeBtn()}
+function updateThemeBtn(){const btn=document.getElementById('themeToggle');if(btn)btn.textContent=document.body.classList.contains('light')?'🌙':'☀️'}
+
 // --- Init ---
+initTheme();
 initFilters();
 updateWrongBadge();
 renderCard();
