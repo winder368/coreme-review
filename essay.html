@@ -361,7 +361,7 @@ function renderMain(){
     <div class="answer-area">
       <label>Your Answer:</label>
       <textarea id="answerInput" placeholder="Write ${q.t==='A'?'1-2':q.t==='D'?'2-4':'3-5'} sentences in English...">${esc(draft)}</textarea>
-      <div class="meta"><span id="charCount">${draft.length} chars</span><span>${q.t==='A'?'~20-40 words':q.t==='D'?'~30-60 words':'~40-80 words'}</span></div>
+      <div class="meta"><span id="charCount">${draft.length} chars</span><span style="display:flex;gap:10px;align-items:center"><span>${q.t==='A'?'~20-40 words':q.t==='D'?'~30-60 words':'~40-80 words'}</span><span style="opacity:0.5">⌘↵ AI Grade</span></span></div>
     </div>
     <div class="action-bar">
       <button class="btn btn-blue" onclick="submitGrade()" id="gradeBtn">🤖 AI Grade</button>
@@ -372,7 +372,9 @@ function renderMain(){
     <div class="grade-result" id="gradeResult"></div>
     <div class="model-answer" id="modelAnswer"><h4>📖 Model Answer</h4>${esc(q.m)}</div>
     ${hist}`;
-  document.getElementById('answerInput').addEventListener('input',e=>{document.getElementById('charCount').textContent=e.target.value.length+' chars'});
+  const ta=document.getElementById('answerInput');
+  ta.addEventListener('input',e=>{document.getElementById('charCount').textContent=e.target.value.length+' chars'});
+  ta.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();submitGrade()}});
 }
 
 function formatCodeInQ(text){
