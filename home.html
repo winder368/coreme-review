@@ -6,16 +6,17 @@
 <title>COREME Midterm Review</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.container{max-width:520px;width:90%;text-align:center;padding:40px 20px}
-h1{font-size:28px;color:#93c5fd;margin-bottom:8px}
-.subtitle{color:#94a3b8;font-size:15px;margin-bottom:40px}
-.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;margin-bottom:16px;cursor:pointer;transition:all .2s;text-decoration:none;display:block}
-.card:hover{border-color:#60a5fa;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#FAF6F0;color:#2D2A26;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{max-width:540px;width:90%;text-align:center;padding:40px 20px}
+h1{font-size:28px;color:#1B5FAF;margin-bottom:8px}
+.subtitle{color:#5A524D;font-size:15px;margin-bottom:40px}
+.card{background:#FFFFFF;border:1px solid #DDD5CB;border-radius:16px;padding:28px;margin-bottom:16px;cursor:pointer;transition:all .2s;text-decoration:none;display:block}
+.card:hover{border-color:#2e75b6;transform:translateY(-2px);box-shadow:0 8px 24px rgba(46,117,182,.12)}
 .card .icon{font-size:40px;margin-bottom:12px}
-.card h2{color:#f1f5f9;font-size:20px;margin-bottom:8px}
-.card p{color:#94a3b8;font-size:14px;line-height:1.5}
-.footer{margin-top:32px;color:#475569;font-size:12px;line-height:1.6}
+.card h2{color:#1A1714;font-size:20px;margin-bottom:8px}
+.card p{color:#5A524D;font-size:14px;line-height:1.5}
+.badge{display:inline-block;background:#EEF3FB;color:#1B5FAF;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:600}
+.footer{margin-top:32px;color:#8C837D;font-size:12px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -25,14 +26,20 @@ h1{font-size:28px;color:#93c5fd;margin-bottom:8px}
 
   <a class="card" href="index.html">
     <div class="icon">🃏</div>
-    <h2>100 Flashcards 選擇題卡片</h2>
-    <p>100 題英文選擇題，中英切換、錯題記錄、即時解說<br>按 Week 分類練習，隨機洗牌</p>
+    <h2>Flashcards 選擇題 <span class="badge">120題</span></h2>
+    <p>120 題英文選擇題，含 Week R 專區<br>中英切換、錯題記錄、📌 書籤、隨機洗牌</p>
+  </a>
+
+  <a class="card" href="definitions.html">
+    <div class="icon">📖</div>
+    <h2>Definition Cards 名詞定義 <span class="badge">107術語</span></h2>
+    <p>107 個核心術語翻牌記憶<br>點擊翻牌看定義、✓ Know It 追蹤進度、按分類練習</p>
   </a>
 
   <a class="card" href="essay.html">
     <div class="icon">✍️</div>
-    <h2>Essay Practice 申論練習</h2>
-    <p>20 題申論模擬題，接 Claude API 即時批改<br>答題提示、擬答、歷史記錄</p>
+    <h2>Short Answer Practice 簡答練習 <span class="badge">90題</span></h2>
+    <p>90 題簡答，接 Claude API 即時批改<br>⌘↵ 送出、hint 提示、英文寫作鷹架</p>
   </a>
 
   <div class="footer">

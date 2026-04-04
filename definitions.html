@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COREME Definition Cards — 107 Terms</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;transition:background .2s,color .2s}
+
+.header{background:#1e293b;padding:14px 20px;border-bottom:2px solid #2e75b6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:relative;z-index:20}
+.header h1{font-size:17px;color:#93c5fd}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stats-row{font-size:13px;color:#94a3b8}
+.stats-row .known{color:#4ade80;font-weight:bold}
+.stats-row .total{color:#94a3b8}
+
+.filters{background:#1e293b;padding:10px 20px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #334155;align-items:center}
+.filter-btn{padding:5px 12px;border:1px solid #475569;border-radius:16px;background:transparent;color:#94a3b8;cursor:pointer;font-size:12px;transition:all .2s}
+.filter-btn:hover{border-color:#93c5fd;color:#e2e8f0}
+.filter-btn.active{background:#2e75b6;color:white;border-color:#2e75b6}
+.filter-btn.review-btn{border-color:#f59e0b;color:#f59e0b}
+.filter-btn.review-btn.active{background:#78350f;color:white;border-color:#78350f}
+.filter-btn.flag-btn-filter{border-color:#f59e0b;color:#f59e0b}
+.filter-btn.flag-btn-filter.active{background:#78350f;color:white;border-color:#78350f}
+
+.progress-bar{height:4px;background:#334155}
+.progress-fill{height:100%;background:linear-gradient(90deg,#4ade80,#86efac);transition:width .4s}
+
+.container{max-width:680px;margin:0 auto;padding:28px 16px}
+
+/* Flip Card */
+.flip-area{perspective:1200px;margin-bottom:20px;cursor:pointer;user-select:none}
+.flip-card{position:relative;width:100%;min-height:280px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.flip-card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;width:100%;min-height:280px;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 28px;text-align:center}
+.card-front{background:linear-gradient(135deg,#1e293b,#1a2332);border:1px solid #334155}
+.card-back{background:linear-gradient(135deg,#0c1a2e,#0f1f38);border:1px solid #2e75b6;transform:rotateY(180deg)}
+
+.card-cat{font-size:11px;padding:3px 10px;border-radius:12px;background:#2e75b6;color:white;margin-bottom:16px}
+.card-term{font-size:26px;font-weight:700;color:#f1f5f9;line-height:1.3;margin-bottom:12px}
+.card-term-zh{font-size:14px;color:#64748b;margin-bottom:8px}
+.flip-hint{font-size:12px;color:#475569;margin-top:20px}
+
+.card-back-cat{font-size:11px;padding:3px 10px;border-radius:12px;background:#1e3a5f;color:#93c5fd;margin-bottom:14px}
+.card-back-term{font-size:15px;font-weight:600;color:#93c5fd;margin-bottom:16px}
+.card-def{font-size:16px;line-height:1.8;color:#e2e8f0;max-width:520px}
+.card-def em{color:#fbbf24;font-style:normal;font-weight:600}
+
+/* Status badge */
+.status-badge{position:absolute;top:14px;right:14px;font-size:18px;opacity:.7}
+
+/* Nav */
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.nav button{padding:9px 22px;border:none;border-radius:10px;background:#334155;color:#e2e8f0;cursor:pointer;font-size:14px;transition:all .2s}
+.nav button:hover{background:#475569}
+.nav button:disabled{opacity:.3;cursor:not-allowed}
+.card-counter{font-size:15px;color:#94a3b8}
+
+/* Action buttons */
+.action-row{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.btn-learning{flex:1;max-width:180px;padding:12px;border:none;border-radius:12px;background:#450a0a;color:#fca5a5;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s}
+.btn-learning:hover{background:#7f1d1d;transform:translateY(-1px)}
+.btn-know{flex:1;max-width:180px;padding:12px;border:none;border-radius:12px;background:#14532d;color:#86efac;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s}
+.btn-know:hover{background:#166534;transform:translateY(-1px)}
+
+.kbd-hint{text-align:center;font-size:12px;color:#475569;margin-top:4px}
+.flag-btn-card{background:none;border:none;cursor:pointer;font-size:17px;padding:2px 6px;opacity:.3;transition:opacity .15s,transform .15s;position:absolute;top:14px;left:14px}
+.flag-btn-card:hover{opacity:1;transform:scale(1.2)}
+.flag-btn-card.flagged{opacity:1}
+
+.empty-msg{text-align:center;padding:80px 20px;color:#64748b;font-size:16px}
+.empty-emoji{font-size:48px;margin-bottom:16px}
+
+/* Theme btn */
+.theme-btn{background:none;border:1px solid #475569;border-radius:8px;padding:3px 8px;cursor:pointer;font-size:15px;line-height:1.4;color:inherit;transition:border-color .2s}
+.theme-btn:hover{border-color:#93c5fd}
+.home-btn{background:none;border:1px solid #475569;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;color:#94a3b8;text-decoration:none;transition:all .2s}
+.home-btn:hover{border-color:#93c5fd;color:#e2e8f0}
+
+/* ── Light Mode ── */
+body.light{background:#FAF6F0;color:#2D2A26}
+body.light .header{background:#F0E8DF;border-bottom-color:#2e75b6}
+body.light .header h1{color:#1B5FAF}
+body.light .stats-row{color:#5A524D}
+body.light .stats-row .known{color:#166534}
+body.light .filters{background:#F0E8DF;border-bottom-color:#DDD5CB}
+body.light .filter-btn{border-color:#C9BDB2;color:#5A524D}
+body.light .filter-btn:hover{border-color:#1B5FAF;color:#1B5FAF}
+body.light .filter-btn.active{background:#2e75b6;color:white;border-color:#2e75b6}
+body.light .filter-btn.review-btn{border-color:#d97706;color:#d97706}
+body.light .filter-btn.review-btn.active{background:#92400e;color:white;border-color:#92400e}
+body.light .progress-bar{background:#DDD5CB}
+body.light .flip-area{filter:none}
+body.light .card-front{background:linear-gradient(135deg,#FFFFFF,#F7F0E9);border-color:#DDD5CB}
+body.light .card-back{background:linear-gradient(135deg,#EEF6FF,#E8F0FD);border-color:#2e75b6}
+body.light .card-term{color:#1A1714}
+body.light .card-term-zh{color:#8C837D}
+body.light .flip-hint{color:#C9BDB2}
+body.light .card-back-term{color:#1B5FAF}
+body.light .card-def{color:#2D2A26}
+body.light .card-def em{color:#D97706}
+body.light .nav button{background:#DDD5CB;color:#2D2A26}
+body.light .nav button:hover{background:#C9BDB2}
+body.light .card-counter{color:#5A524D}
+body.light .btn-learning{background:#FEE2E2;color:#991b1b}
+body.light .btn-learning:hover{background:#FECACA}
+body.light .btn-know{background:#DCFCE7;color:#166534}
+body.light .btn-know:hover{background:#BBF7D0}
+body.light .kbd-hint{color:#8C837D}
+body.light .empty-msg{color:#8C837D}
+body.light .theme-btn{border-color:#C9BDB2}
+body.light .theme-btn:hover{border-color:#1B5FAF}
+body.light .home-btn{border-color:#C9BDB2;color:#5A524D}
+body.light .home-btn:hover{border-color:#1B5FAF;color:#1B5FAF}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>COREME 名詞定義卡 (107)</h1>
+  <div class="header-right">
+    <span class="stats-row"><span class="known" id="knownCount">0</span> / <span class="total" id="totalCount">0</span> known</span>
+    <a href="home.html" class="home-btn">🏠 Home</a>
+    <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark">🌙</button>
+  </div>
+</div>
+<div class="filters" id="filterBar"></div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="container">
+  <div class="flip-area" id="flipArea" onclick="flipCard()">
+    <div class="flip-card" id="flipCard">
+      <div class="card-face card-front" id="cardFront"></div>
+      <div class="card-face card-back" id="cardBack"></div>
+    </div>
+  </div>
+  <div class="nav">
+    <button id="btnPrev" onclick="prev()" disabled>← Prev</button>
+    <span class="card-counter" id="counter">1 / 107</span>
+    <button id="btnNext" onclick="next()">Next →</button>
+  </div>
+  <div class="action-row">
+    <button class="btn-learning" onclick="markLearning()">✗ Still Learning</button>
+    <button class="btn-know" onclick="markKnow()">✓ Know It</button>
+  </div>
+  <div class="kbd-hint">Space = flip ｜ ← → = navigate ｜ 1 = Still Learning ｜ 2 = Know It ｜ F = flag</div>
+</div>
+
+<script>
+const CARDS = [
+// === Validity ===
+{id:1,cat:"Validity",term:"Validity",zh:"效度",def:"The extent to which a measure actually <em>measures what it claims</em> to measure."},
+{id:2,cat:"Validity",term:"Face Validity",zh:"表面效度",def:"The measure <em>appears reasonable</em> on its surface — the weakest form; relies only on intuition, not evidence."},
+{id:3,cat:"Validity",term:"Content Validity",zh:"內容效度",def:"The measure covers the <em>full range</em> of the concept's dimensions, not just one aspect."},
+{id:4,cat:"Validity",term:"Criterion-related Validity",zh:"效標關聯效度",def:"The measure <em>predicts an external criterion</em> (e.g., SAT scores predict college GPA)."},
+{id:5,cat:"Validity",term:"Construct Validity",zh:"建構效度",def:"The measure behaves <em>as theoretically expected</em> — umbrella term encompassing convergent + discriminant validity."},
+{id:6,cat:"Validity",term:"Convergent Validity",zh:"收斂效度",def:"Measures of <em>theoretically related</em> concepts <em>correlate</em> with each other (e.g., political knowledge ↔ political interest)."},
+{id:7,cat:"Validity",term:"Discriminant Validity",zh:"區辨效度",def:"Measures of <em>theoretically unrelated</em> concepts do <em>NOT correlate</em> (e.g., political knowledge ↔ food preference)."},
+// === Reliability ===
+{id:8,cat:"Reliability",term:"Reliability",zh:"信度",def:"The <em>consistency</em> of a measure — produces the same results on repeated observations."},
+{id:9,cat:"Reliability",term:"Test-retest Reliability",zh:"再測信度",def:"The <em>same respondents</em> produce similar results across <em>different time points</em>."},
+{id:10,cat:"Reliability",term:"Intercoder Reliability",zh:"編碼者間信度",def:"Two or more coders independently coding the same material <em>agree</em> with each other."},
+{id:11,cat:"Reliability",term:"Internal Consistency",zh:"內部一致性",def:"Items within a scale all measure the <em>same underlying construct</em> (measured by Cronbach's α ≥ 0.7)."},
+{id:12,cat:"Reliability",term:"Cronbach's Alpha (α)",zh:"",def:"A coefficient (0–1) measuring <em>internal consistency</em>. α ≥ 0.7 is the acceptable threshold."},
+{id:13,cat:"Reliability",term:"Krippendorff's Alpha",zh:"",def:"Intercoder reliability coefficient used in <em>content analysis</em>. Acceptable threshold: <em>≥ 0.67</em>."},
+{id:14,cat:"Reliability",term:"Cohen's Kappa (κ)",zh:"",def:"Intercoder reliability coefficient <em>corrected for chance agreement</em>."},
+// === NOIR ===
+{id:15,cat:"NOIR",term:"Nominal",zh:"名義",def:"Categories with <em>no inherent order</em> — only classification. (e.g., nationality, political party, gender)"},
+{id:16,cat:"NOIR",term:"Ordinal",zh:"順序",def:"Categories with <em>rank order</em> but <em>unequal intervals</em>. (e.g., Bad / OK / Good / Best)"},
+{id:17,cat:"NOIR",term:"Interval",zh:"等距",def:"<em>Equal spacing</em> between values, but <em>no absolute zero</em>. (e.g., Celsius temperature, Likert scale)"},
+{id:18,cat:"NOIR",term:"Ratio",zh:"比率",def:"Equal spacing <em>with an absolute zero</em> — ratios are meaningful. (e.g., income, age, word count)"},
+// === Conceptualization ===
+{id:19,cat:"Conceptualization",term:"Concept",zh:"概念",def:"An <em>abstract idea</em> or mental construct to be studied. (e.g., 'social capital', 'media trust')"},
+{id:20,cat:"Conceptualization",term:"Dimension",zh:"面向",def:"A <em>distinct sub-component</em> or facet of the concept. (e.g., bonding vs. bridging social capital)"},
+{id:21,cat:"Conceptualization",term:"Indicator",zh:"指標",def:"An <em>observable sign</em> that represents a dimension. (e.g., survey questions about trust)"},
+{id:22,cat:"Conceptualization",term:"Operational Definition",zh:"操作定義",def:"The exact specification of <em>how a variable is measured</em> in a study. (e.g., 'measured with a 5-point Likert scale')"},
+// === Causation ===
+{id:23,cat:"Causation",term:"Association",zh:"關聯",def:"Requirement #1 for causation: the two variables must be <em>statistically correlated</em>."},
+{id:24,cat:"Causation",term:"Direction of Influence",zh:"影響方向",def:"Requirement #2 for causation: the <em>cause must precede</em> the effect in time (temporal order)."},
+{id:25,cat:"Causation",term:"Elimination of Rival Explanations",zh:"排除替代解釋",def:"Requirement #3 for causation: <em>alternative explanations</em> (third variables, reverse causation) must be ruled out."},
+{id:26,cat:"Causation",term:"Spurious Correlation",zh:"虛假相關",def:"Two variables appear related only because a <em>third variable causes both</em>. (e.g., shoe size ↔ math ability, both caused by age)"},
+{id:27,cat:"Causation",term:"Reverse Causation",zh:"反向因果",def:"The assumed cause and effect are actually <em>reversed in direction</em>."},
+{id:28,cat:"Causation",term:"Ecological Fallacy",zh:"生態謬誤",def:"Applying <em>group-level findings to individuals</em>. (e.g., states with more immigrants have higher incomes ≠ immigrants earn more)"},
+// === Research Questions ===
+{id:29,cat:"Research Questions",term:"RQ of Definition",zh:"定義型",def:"Asks: <em>What is this phenomenon?</em> (e.g., 'What is fake news?')"},
+{id:30,cat:"Research Questions",term:"RQ of Fact",zh:"事實型",def:"Asks: <em>Does this exist or to what extent?</em> (e.g., 'How prevalent is misinformation?')"},
+{id:31,cat:"Research Questions",term:"RQ of Value",zh:"價值型",def:"Asks: <em>Is this good or bad?</em> (e.g., 'Is social media harmful to democracy?')"},
+{id:32,cat:"Research Questions",term:"RQ of Policy",zh:"政策型",def:"Asks: <em>What should we do about it?</em> (e.g., 'Should TikTok be banned?')"},
+{id:33,cat:"Research Questions",term:"RQ of Relationship",zh:"關係型",def:"Asks: <em>Are these two variables associated?</em> (e.g., 'Is media use related to political trust?')"},
+{id:34,cat:"Research Questions",term:"RQ of Cause & Effect",zh:"因果型",def:"Asks: <em>Does X cause Y?</em> (e.g., 'Does disinformation reduce political trust?')"},
+// === Hypotheses ===
+{id:35,cat:"Hypotheses",term:"Directional Hypothesis",zh:"方向性假設",def:"Predicts the <em>specific direction</em> of a relationship. (e.g., 'Exposure to X will <em>increase</em> Y')"},
+{id:36,cat:"Hypotheses",term:"Non-directional Hypothesis",zh:"非方向性假設",def:"Predicts that a relationship <em>exists</em> without specifying the direction. (e.g., 'X and Y are related')"},
+{id:37,cat:"Hypotheses",term:"Null Hypothesis (H₀)",zh:"虛無假設",def:"States there is <em>no effect and no relationship</em> — what statistical tests attempt to reject."},
+{id:38,cat:"Hypotheses",term:"Research Question (RQ)",zh:"研究問題",def:"An open-ended question used when <em>little prior literature</em> exists to justify a directional prediction."},
+// === Variables ===
+{id:39,cat:"Variables",term:"Independent Variable (IV)",zh:"自變項",def:"The variable <em>manipulated or used to predict</em> — the presumed <em>cause</em>."},
+{id:40,cat:"Variables",term:"Dependent Variable (DV)",zh:"依變項",def:"The variable <em>measured as the outcome</em> — the presumed <em>effect</em>."},
+{id:41,cat:"Variables",term:"Control Variable",zh:"控制變項",def:"A variable <em>held constant</em> to prevent it from confounding the IV–DV relationship."},
+{id:42,cat:"Variables",term:"Moderator",zh:"調節變項",def:"A variable that <em>changes the strength or direction</em> of the IV–DV relationship."},
+{id:43,cat:"Variables",term:"Mediator",zh:"中介變項",def:"A variable that explains the <em>mechanism</em> through which IV affects DV (the 'how')."},
+{id:44,cat:"Variables",term:"Confounding Variable",zh:"混淆變項",def:"An unmeasured third variable that <em>distorts</em> the apparent IV–DV relationship."},
+// === Validity Threats ===
+{id:45,cat:"Validity Threats",term:"History Threat",zh:"歷史威脅",def:"An <em>external event</em> occurs during the study that affects the DV independently of the treatment."},
+{id:46,cat:"Validity Threats",term:"Maturation",zh:"成熟效果",def:"Participants <em>naturally change over time</em> (grow older, get tired, recover) during the study."},
+{id:47,cat:"Validity Threats",term:"Testing Effect",zh:"測試效果",def:"Taking a <em>pretest changes</em> participants' scores on the posttest."},
+{id:48,cat:"Validity Threats",term:"Regression to the Mean",zh:"均值回歸",def:"<em>Extreme scores</em> naturally <em>move toward the average</em> on re-measurement."},
+{id:49,cat:"Validity Threats",term:"Selection Bias",zh:"選擇偏誤",def:"Groups being compared are <em>not equivalent</em> at the start of the study."},
+{id:50,cat:"Validity Threats",term:"Attrition (Mortality)",zh:"流失效果",def:"Participants <em>drop out in a non-random pattern</em>, skewing the remaining sample."},
+// === Sampling ===
+{id:51,cat:"Sampling",term:"EPSEM",zh:"等機率抽樣",def:"<em>Equal Probability of Selection Method</em> — every member of the population has an equal chance of being selected."},
+{id:52,cat:"Sampling",term:"Simple Random Sampling",zh:"簡單隨機抽樣",def:"Every member is <em>randomly selected with equal probability</em> — the gold standard of probability sampling."},
+{id:53,cat:"Sampling",term:"Systematic Sampling",zh:"系統抽樣",def:"Select every <em>k</em>-th person from a list (e.g., every 10th name). Requires a random starting point."},
+{id:54,cat:"Sampling",term:"Stratified Sampling",zh:"分層抽樣",def:"Divide population into <em>strata</em> (subgroups), then <em>randomly sample</em> from each stratum."},
+{id:55,cat:"Sampling",term:"Cluster Sampling",zh:"叢集抽樣",def:"Randomly select <em>naturally occurring groups</em> (clusters), then sample within those groups."},
+{id:56,cat:"Sampling",term:"Convenience Sampling",zh:"便利抽樣",def:"Select whoever is <em>easily accessible</em> — fast but not representative; non-probability."},
+{id:57,cat:"Sampling",term:"Purposive Sampling",zh:"立意抽樣",def:"Select based on <em>specific criteria or researcher judgment</em> — non-probability."},
+{id:58,cat:"Sampling",term:"Snowball Sampling",zh:"滾雪球抽樣",def:"Existing participants <em>refer</em> others — used for <em>hard-to-reach</em> populations; non-probability."},
+{id:59,cat:"Sampling",term:"Quota Sampling",zh:"配額抽樣",def:"Fill <em>predetermined quotas</em> for subgroups <em>without random selection</em> within groups; non-probability."},
+// === Survey Error ===
+{id:60,cat:"Survey Error",term:"Coverage Error",zh:"涵蓋誤差",def:"The <em>sampling frame</em> does not cover the full target population — some groups are <em>systematically excluded</em>."},
+{id:61,cat:"Survey Error",term:"Sampling Error",zh:"抽樣誤差",def:"The <em>unavoidable difference</em> between sample results and the true population value — reducible with larger samples."},
+{id:62,cat:"Survey Error",term:"Nonresponse Bias",zh:"無回應偏誤",def:"Those who <em>choose not to respond</em> differ systematically from those who do."},
+{id:63,cat:"Survey Error",term:"Measurement Error",zh:"測量誤差",def:"Errors caused by <em>how questions are asked</em> — wording, order, format, or context."},
+{id:64,cat:"Survey Error",term:"Social Desirability Bias",zh:"社會期許偏誤",def:"Respondents give <em>socially acceptable</em> answers rather than truthful ones."},
+{id:65,cat:"Survey Error",term:"Acquiescence Bias",zh:"默許偏誤",def:"The tendency to <em>agree</em> with statements regardless of content ('yes-saying')."},
+{id:66,cat:"Survey Error",term:"Double-barreled Question",zh:"雙管問題",def:"One question asks about <em>two things at once</em> — the respondent cannot answer both separately."},
+{id:67,cat:"Survey Error",term:"Leading Question",zh:"引導性問題",def:"A question that <em>suggests the desired answer</em>. (e.g., 'Don't you agree that…?')"},
+// === Confusion Matrix ===
+{id:68,cat:"Confusion Matrix",term:"True Positive (TP)",zh:"真陽性",def:"Actual positive, <em>correctly</em> classified as positive. ✓"},
+{id:69,cat:"Confusion Matrix",term:"True Negative (TN)",zh:"真陰性",def:"Actual negative, <em>correctly</em> classified as negative. ✓"},
+{id:70,cat:"Confusion Matrix",term:"False Positive (FP)",zh:"假陽性",def:"Actual negative, <em>incorrectly</em> classified as positive — <em>Type I Error</em> (false alarm)."},
+{id:71,cat:"Confusion Matrix",term:"False Negative (FN)",zh:"假陰性",def:"Actual positive, <em>incorrectly</em> classified as negative — <em>Type II Error</em> (missed case)."},
+{id:72,cat:"Confusion Matrix",term:"Accuracy",zh:"準確率",def:"<em>(TP + TN) / Total</em> — proportion of all correct classifications. Can be misleading with imbalanced data."},
+// === Statistics ===
+{id:73,cat:"Statistics",term:"Mean",zh:"平均數",def:"The <em>arithmetic average</em> — sum of all values divided by n. Sensitive to outliers."},
+{id:74,cat:"Statistics",term:"Median",zh:"中位數",def:"The <em>middle value</em> when data are sorted — <em>robust to outliers</em>."},
+{id:75,cat:"Statistics",term:"Mode",zh:"眾數",def:"The <em>most frequently occurring</em> value in the data."},
+{id:76,cat:"Statistics",term:"Standard Deviation (SD)",zh:"標準差",def:"The <em>average distance</em> of each data point from the mean — measures spread/dispersion."},
+{id:77,cat:"Statistics",term:"Standard Error (SE)",zh:"標準誤",def:"The SD of the <em>sampling distribution</em> — how much the sample mean varies from the true population mean."},
+{id:78,cat:"Statistics",term:"Variance",zh:"變異數",def:"SD² — the <em>squared average deviation</em> from the mean."},
+// === Paradigms ===
+{id:79,cat:"Paradigms",term:"Paradigm",zh:"典範",def:"A <em>model or frame of reference</em> through which to observe and understand phenomena (Babbie)."},
+{id:80,cat:"Paradigms",term:"Social Scientific Perspective",zh:"社會科學觀點",def:"Uses <em>empirical observation</em> with systematic, replicable methods — quantitative or qualitative."},
+{id:81,cat:"Paradigms",term:"Rhetorical Perspective",zh:"修辭觀點",def:"Studies <em>how language persuades</em> — typically through case studies and close reading."},
+{id:82,cat:"Paradigms",term:"Critical / Interpretive Perspective",zh:"批判／詮釋觀點",def:"<em>Exposes power structures</em> and gives voice to marginalized groups."},
+{id:83,cat:"Paradigms",term:"Positivism (Comte)",zh:"實證主義",def:"Scientific knowledge must come from <em>empirical observation</em>, not theology or metaphysics."},
+{id:84,cat:"Paradigms",term:"Falsification (Popper)",zh:"否證論",def:"Scientific theories must be <em>capable of being proven wrong</em>. One disconfirming case disproves a universal claim."},
+{id:85,cat:"Paradigms",term:"Paradigm Shift (Kuhn)",zh:"典範轉移",def:"Science progresses through <em>revolutionary breaks</em>, not gradual accumulation: normal science → crisis → new paradigm."},
+{id:86,cat:"Paradigms",term:"Incommensurability (Kuhn)",zh:"不可通約性",def:"Different paradigms are <em>difficult to directly compare</em> because they operate on different assumptions."},
+{id:87,cat:"Paradigms",term:"Middle-range Theory (Merton)",zh:"中程理論",def:"Theories between grand theory and everyday hypotheses — <em>empirically testable</em>. (e.g., Agenda-Setting, Framing)"},
+{id:88,cat:"Paradigms",term:"Deductive Approach",zh:"演繹法",def:"<em>General theory → specific hypothesis → data collection → test</em> (top-down). Common in quantitative research."},
+{id:89,cat:"Paradigms",term:"Inductive Approach",zh:"歸納法",def:"<em>Specific observations → patterns → tentative conclusions → theory</em> (bottom-up). Common in qualitative research."},
+// === Content Analysis ===
+{id:90,cat:"Content Analysis",term:"Manifest Content",zh:"顯性內容",def:"The <em>visible, surface-level</em> content — what is directly stated or shown."},
+{id:91,cat:"Content Analysis",term:"Latent Content",zh:"隱性內容",def:"The <em>underlying meaning</em> or theme — requires interpretation by the coder."},
+{id:92,cat:"Content Analysis",term:"Codebook",zh:"編碼手冊",def:"Document specifying <em>all coding categories, rules, and examples</em> for coders to follow consistently."},
+{id:93,cat:"Content Analysis",term:"Code Sheet",zh:"編碼表",def:"The <em>recording form</em> where coders enter their codes for each unit of analysis."},
+{id:94,cat:"Content Analysis",term:"Unit of Analysis",zh:"分析單位",def:"The <em>basic element</em> being analyzed. (e.g., article, tweet, paragraph, image, episode)"},
+{id:95,cat:"Content Analysis",term:"Keywords Method",zh:"關鍵字法",def:"Flag content containing <em>specific words</em> — the <em>simplest</em> automated method; fast but context-blind."},
+{id:96,cat:"Content Analysis",term:"Dictionary Method",zh:"字典法",def:"Count words from a <em>predefined vocabulary list</em> mapped to categories (e.g., LIWC)."},
+{id:97,cat:"Content Analysis",term:"ML Classifier",zh:"機器學習分類器",def:"Trained on <em>human-coded examples</em> to predict categories for new, unseen text."},
+{id:98,cat:"Content Analysis",term:"Zero-shot LLM (ChatGPT)",zh:"零樣本大型語言模型",def:"Uses a pre-trained model with a <em>prompt only</em> — no training data required; most flexible, least controlled."},
+// === Experimental Design ===
+{id:99,cat:"Experiment",term:"Between-subjects Design",zh:"受試者間設計",def:"<em>Different participants</em> in each condition — eliminates carryover effects but requires more participants."},
+{id:100,cat:"Experiment",term:"Within-subjects Design",zh:"受試者內設計",def:"<em>Same participants</em> in all conditions — efficient but risks testing and order effects."},
+{id:101,cat:"Experiment",term:"Mixed Design",zh:"混合設計",def:"<em>Combines</em> between-subjects and within-subjects factors in one study."},
+{id:102,cat:"Experiment",term:"Factorial Design (2×2)",zh:"因子設計",def:"Two or more IVs each with multiple levels — allows testing of <em>main effects and interaction effects</em>."},
+{id:103,cat:"Experiment",term:"Interaction Effect",zh:"交互作用",def:"The effect of one IV <em>depends on the level</em> of another IV."},
+{id:104,cat:"Experiment",term:"Manipulation Check",zh:"操弄確認",def:"A measure verifying that the <em>IV was successfully manipulated</em> as intended by the researcher."},
+{id:105,cat:"Experiment",term:"Preregistration",zh:"預先登記",def:"Publicly registering the <em>hypothesis and analysis plan before</em> data collection to prevent HARKing."},
+{id:106,cat:"Experiment",term:"HARKing",zh:"事後假設",def:"<em>Hypothesizing After Results are Known</em> — presenting post-hoc findings as if they were pre-planned predictions."},
+{id:107,cat:"Experiment",term:"Power Analysis",zh:"統計檢定力分析",def:"Calculating the <em>minimum sample size</em> needed to detect an effect at a given significance level (usually α = 0.05)."}
+];
+
+// State
+let cards = [...CARDS];
+let idx = 0;
+let isFlipped = false;
+let activeFilter = 'All';
+
+function getKnown(){try{return new Set(JSON.parse(localStorage.getItem('coreme_known_defs')||'[]'))}catch{return new Set()}}
+function saveKnown(s){localStorage.setItem('coreme_known_defs',JSON.stringify([...s]))}
+function getFlagged(){try{return new Set(JSON.parse(localStorage.getItem('coreme_flagged_def')||'[]'))}catch{return new Set()}}
+function saveFlagged(s){localStorage.setItem('coreme_flagged_def',JSON.stringify([...s]))}
+
+function buildFilters(){
+  const bar=document.getElementById('filterBar');
+  const cats=['All',...new Set(CARDS.map(c=>c.cat)),'📌 Flagged','🔁 Review'];
+  cats.forEach(cat=>{
+    const btn=document.createElement('button');
+    btn.textContent=cat;
+    const isReview=cat==='🔁 Review';
+    const isFlag=cat==='📌 Flagged';
+    btn.className='filter-btn'+(cat===activeFilter?' active':'')+(isReview?' review-btn':'')+(isFlag?' flag-btn-filter':'');
+    btn.onclick=()=>{
+      activeFilter=cat;
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilter();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function applyFilter(){
+  const known=getKnown();
+  const flagged=getFlagged();
+  if(activeFilter==='All') cards=[...CARDS];
+  else if(activeFilter==='🔁 Review') cards=CARDS.filter(c=>!known.has(c.id));
+  else if(activeFilter==='📌 Flagged') cards=CARDS.filter(c=>flagged.has(c.id));
+  else cards=CARDS.filter(c=>c.cat===activeFilter);
+  idx=0;
+  render();
+}
+
+function render(){
+  const known=getKnown();
+  const flagged=getFlagged();
+  // Stats (always from ALL)
+  document.getElementById('knownCount').textContent=known.size;
+  document.getElementById('totalCount').textContent=CARDS.length;
+  const pct=CARDS.length>0?known.size/CARDS.length*100:0;
+  document.getElementById('progressFill').style.width=pct+'%';
+
+  if(cards.length===0){
+    document.getElementById('flipArea').innerHTML='<div class="empty-msg"><div class="empty-emoji">🎉</div>No cards in this set!</div>';
+    document.getElementById('counter').textContent='0 / 0';
+    document.getElementById('btnPrev').disabled=true;
+    document.getElementById('btnNext').disabled=true;
+    return;
+  }
+
+  const c=cards[idx];
+  const isKnown=known.has(c.id);
+  const isFlagged=flagged.has(c.id);
+
+  // Restore flip card HTML if needed
+  if(!document.getElementById('flipCard')){
+    document.getElementById('flipArea').innerHTML=`<div class="flip-card" id="flipCard"><div class="card-face card-front" id="cardFront"></div><div class="card-face card-back" id="cardBack"></div></div>`;
+    document.getElementById('flipArea').onclick=flipCard;
+  }
+
+  const fc=document.getElementById('flipCard');
+  isFlipped=false;
+  fc.classList.remove('flipped');
+
+  document.getElementById('cardFront').innerHTML=`
+    <button class="flag-btn-card ${isFlagged?'flagged':''}" onclick="event.stopPropagation();toggleFlag(${c.id})" title="Flag">📌</button>
+    ${isKnown?'<span class="status-badge">✅</span>':''}
+    <span class="card-cat">${c.cat}</span>
+    <div class="card-term">${c.term}</div>
+    ${c.zh?`<div class="card-term-zh">${c.zh}</div>`:''}
+    <div class="flip-hint">click or press Space to reveal</div>`;
+
+  document.getElementById('cardBack').innerHTML=`
+    <button class="flag-btn-card ${isFlagged?'flagged':''}" onclick="event.stopPropagation();toggleFlag(${c.id})" title="Flag">📌</button>
+    <span class="card-back-cat">${c.cat}</span>
+    <div class="card-back-term">${c.term}</div>
+    <div class="card-def">${c.def}</div>`;
+
+  document.getElementById('counter').textContent=`${idx+1} / ${cards.length}`;
+  document.getElementById('btnPrev').disabled=idx===0;
+  document.getElementById('btnNext').disabled=idx===cards.length-1;
+}
+
+function flipCard(){
+  const fc=document.getElementById('flipCard');
+  if(!fc)return;
+  isFlipped=!isFlipped;
+  fc.classList.toggle('flipped',isFlipped);
+}
+
+function prev(){if(idx>0){idx--;isFlipped=false;render()}}
+function next(){if(idx<cards.length-1){idx++;isFlipped=false;render()}}
+
+function markKnow(){
+  const c=cards[idx];
+  const s=getKnown();s.add(c.id);saveKnown(s);
+  if(idx<cards.length-1)idx++;
+  isFlipped=false;render();
+}
+function markLearning(){
+  const c=cards[idx];
+  const s=getKnown();s.delete(c.id);saveKnown(s);
+  if(idx<cards.length-1)idx++;
+  isFlipped=false;render();
+}
+
+function toggleFlag(id){
+  const s=getFlagged();
+  if(s.has(id))s.delete(id);else s.add(id);
+  saveFlagged(s);render();
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard()}
+  else if(e.key==='ArrowRight')next();
+  else if(e.key==='ArrowLeft')prev();
+  else if(e.key==='1')markLearning();
+  else if(e.key==='2')markKnow();
+  else if(e.key==='f'||e.key==='F'){const c=cards[idx];if(c)toggleFlag(c.id)}
+});
+
+// Theme
+function initTheme(){const t=localStorage.getItem('coreme_theme')||'light';document.body.classList.toggle('light',t==='light');updateThemeBtn()}
+function toggleTheme(){const on=document.body.classList.toggle('light');localStorage.setItem('coreme_theme',on?'light':'dark');updateThemeBtn()}
+function updateThemeBtn(){const btn=document.getElementById('themeToggle');if(btn)btn.textContent=document.body.classList.contains('light')?'🌙':'☀️'}
+
+initTheme();buildFilters();applyFilter();
+</script>
+</body>
+</html>
