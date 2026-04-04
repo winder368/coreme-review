@@ -89,6 +89,18 @@
     .container { padding: 16px 12px; }
   }
 
+  /* ── Wrong List Toggle ── */
+  .wrong-toggle-row { margin-top: 12px; padding-top: 10px; border-top: 1px solid #334155; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .btn-wrong-remove { background: #1a3a1a; border: 1px solid #4ade80; color: #4ade80; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .2s; }
+  .btn-wrong-remove:hover { background: #14532d; border-color: #86efac; }
+  .btn-wrong-add { background: #1a0a0a; border: 1px solid #f87171; color: #f87171; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .2s; }
+  .btn-wrong-add:hover { background: #450a0a; border-color: #fca5a5; }
+  body.light .wrong-toggle-row { border-top-color: #DDD5CB; }
+  body.light .btn-wrong-remove { background: #DCFCE7; border-color: #166534; color: #166534; }
+  body.light .btn-wrong-remove:hover { background: #BBF7D0; }
+  body.light .btn-wrong-add { background: #FEE2E2; border-color: #dc2626; color: #dc2626; }
+  body.light .btn-wrong-add:hover { background: #FECACA; }
+
   /* ── Flag / Bookmark ── */
   .flag-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 5px; opacity: 0.3; transition: opacity .15s, transform .15s; line-height: 1; vertical-align: middle; }
   .flag-btn:hover { opacity: 1; transform: scale(1.2); }
@@ -646,13 +658,20 @@ function renderCard() {
   });
 
   const correctLetter = String.fromCharCode(65 + correctPos);
-  const wrongMark = getWrongList().includes(qid) ? ' <span style="color:#f87171;font-size:12px;">\u2717 in wrong list</span>' : '';
+  const inWrong = getWrongList().includes(qid);
+  const wrongMark = inWrong ? ` <span id="wrongMark" style="color:#f87171;font-size:12px;">\u2717 in wrong list</span>` : `<span id="wrongMark"></span>`;
 
   let explanationHtml = '';
   if (isAnswered) {
     const icon = wasCorrect ? '\u2705' : '\u274c';
     const resultText = wasCorrect ? (lang==='zh'?'正確！':'Correct!') : `${lang==='zh'?'錯誤！答案':'Wrong! Answer'}: (${correctLetter}) ${ot[correctPos]}`;
     const resultColor = wasCorrect ? '#4ade80' : '#f87171';
+    const nowInWrong = getWrongList().includes(qid);
+    const wrongToggle = `<div class="wrong-toggle-row">
+      <button id="wrongToggleBtn" class="${nowInWrong ? 'btn-wrong-remove' : 'btn-wrong-add'}" onclick="toggleWrongFromExplanation(${qid})">
+        ${nowInWrong ? '✓ 已記住，移出錯題庫' : '＋ 加入錯題庫'}
+      </button>
+    </div>`;
     explanationHtml = `
       <div class="explanation-box show">
         <div class="exp-header">
@@ -660,7 +679,7 @@ function renderCard() {
           <span class="exp-label" style="color:${resultColor}">${resultText}</span>
         </div>
         <div class="exp-text">${q.e}</div>
-        ${!wasCorrect ? '<div style="margin-top:10px;font-size:12px;color:#94a3b8;">\ud83d\udccc This question has been added to your wrong list for review.</div>' : ''}
+        ${wrongToggle}
       </div>
     `;
   }
@@ -694,7 +713,7 @@ function selectOption(idx) {
   sessionAnswered[qid] = idx;
   if (idx === correctPos) {
     correctTotal++;
-    removeFromWrong(qid);
+    // Do NOT auto-remove from wrong list — user decides via button after seeing explanation
   } else {
     wrongTotal++;
     addToWrong(qid);
@@ -726,6 +745,25 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'n' || e.key === 'N') nextCard();
   else if (e.key >= '1' && e.key <= '4') selectOption(parseInt(e.key) - 1);
 });
+
+// --- Wrong List Toggle (manual, from explanation) ---
+function toggleWrongFromExplanation(qid) {
+  const inWrong = getWrongList().includes(qid);
+  if (inWrong) removeFromWrong(qid); else addToWrong(qid);
+  const nowInWrong = getWrongList().includes(qid);
+  // Update button in place
+  const btn = document.getElementById('wrongToggleBtn');
+  if (btn) {
+    btn.textContent = nowInWrong ? '✓ 已記住，移出錯題庫' : '＋ 加入錯題庫';
+    btn.className = nowInWrong ? 'btn-wrong-remove' : 'btn-wrong-add';
+  }
+  // Update wrongMark label in card header
+  const wm = document.getElementById('wrongMark');
+  if (wm) {
+    wm.textContent = nowInWrong ? '✗ in wrong list' : '';
+    wm.style.color = '#f87171';
+  }
+}
 
 // --- Flag / Bookmark ---
 function getFlagged() { try { return JSON.parse(localStorage.getItem('coreme_flagged') || '[]'); } catch { return []; } }
